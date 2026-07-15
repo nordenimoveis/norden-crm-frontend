@@ -1,0 +1,90 @@
+export type LeadStatus =
+  | 'novo'
+  | 'respondeu'
+  | 'em_atendimento'
+  | 'visita_agendada'
+  | 'proposta'
+  | 'negocio_fechado'
+  | 'perdido'
+  | 'frio_standby';
+
+export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi';
+
+export type LeadTemperatura = 'nao_avaliado' | 'frio' | 'morno' | 'quente';
+
+export type Usuario = {
+  id: string;
+  nome: string;
+  email: string;
+  papel: 'gestor' | 'corretor' | 'admin';
+  ativo: boolean;
+};
+
+export type Imovel = {
+  id: string;
+  titulo: string;
+  bairro: string | null;
+};
+
+export type Lead = {
+  id: string;
+  nome: string | null;
+  telefone: string;
+  email: string | null;
+  status: LeadStatus;
+  origem: LeadOrigem;
+  temperatura: LeadTemperatura;
+  atendimentoHumano: boolean;
+  corretorId: string | null;
+  corretor: Usuario | null;
+  imovel: Imovel | null;
+  criadoEm: string;
+};
+
+export type ListaLeadsResposta = {
+  items: Lead[];
+  total: number;
+  page: number;
+  pageSize: number;
+};
+
+export type MensagemDirecao = 'enviada' | 'recebida';
+export type MensagemStatus = 'pendente' | 'enviada' | 'entregue' | 'lida' | 'falhou';
+
+export type Mensagem = {
+  id: string;
+  leadId: string;
+  direcao: MensagemDirecao;
+  conteudo: string;
+  status: MensagemStatus;
+  enviadaPorUsuarioId: string | null;
+  enviadaPorUsuario: { id: string; nome: string } | null;
+  criadoEm: string;
+};
+
+// GET /api/leads/:id retorna o lead + histórico de mensagens
+export type LeadDetalhado = Lead & {
+  mensagens: Mensagem[];
+};
+
+export const ROTULO_STATUS: Record<LeadStatus, string> = {
+  novo: 'Novo Lead',
+  respondeu: 'Aguardando Resposta',
+  em_atendimento: 'Em Atendimento',
+  visita_agendada: 'Visita Agendada',
+  proposta: 'Proposta',
+  negocio_fechado: 'Negócio Fechado',
+  frio_standby: 'Standby / Nutrição',
+  perdido: 'Perdido',
+};
+
+export type QuickReplyTipo = 'global' | 'pessoal';
+
+export type QuickReply = {
+  id: string;
+  titulo: string;
+  textoMensagem: string;
+  tipo: QuickReplyTipo;
+  usuarioId: string | null;
+  ativo: boolean;
+};
