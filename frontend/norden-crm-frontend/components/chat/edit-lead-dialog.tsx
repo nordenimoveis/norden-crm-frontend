@@ -1,0 +1,104 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { Loader2 } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useAtualizarLead } from '@/hooks/use-atualizar-lead';
+import { LeadDetalhado } from '@/lib/types';
+
+export function EditLeadDialog({
+  lead,
+  aberto,
+  onFechar,
+}: {
+  lead: LeadDetalhado;
+  aberto: boolean;
+  onFechar: () => void;
+}) {
+  const [nome, setNome] = useState('');
+  const [telefone, setTelefone] = useState('');
+  const [email, setEmail] = useState('');
+  const [erro, setErro] = useState<string | null>(null);
+
+  const atualizar = useAtualizarLead(lead.id);
+
+  useEffect(() => {
+    if (!aberto) return;
+    setNome(lead.nome ?? '');
+    setTelefone(lead.telefone);
+    setEmail(lead.email ?? '');
+    setErro(null);
+  }, [aberto, lead]);
+
+  async function salvar() {
+    setErro(null);
+    try {
+      await atualizar.mutateAsync({
+        nome: nome.trim() || undefined,
+        telefone: telefone.trim(),
+        email: email.trim() || undefined,
+      });
+      onFechar();
+    } catch {
+      setErro('Não foi possível salvar. Confira se o telefone/e-mail estão em um formato válido.');
+    }
+  }
+
+  return (
+    <Dialog open={aberto} onOpenChange={(v) => !v && onFechar()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar lead</DialogTitle>
+          <DialogDescription>Corrige os dados básicos de contato.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-nome">Nome</Label>
+            <Input id="edit-nome" value={nome} onChange={(e) => setNome(e.target.value)} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-telefone">Telefone</Label>
+            <Input id="edit-telefone" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
+            <p className="text-xs text-muted-foreground">
+              Formato internacional, ex: +5548999999999. Mudar isso não altera o histórico de
+              mensagens já trocadas, mas passa a valer para os próximos envios.
+            </p>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-email">E-mail</Label>
+            <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          {erro && (
+            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+              {erro}
+            </p>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button variant="outline" onClick={onFechar} disabled={atualizar.isPending}>
+            Cancelar
+          </Button>
+          <Button variant="accent" onClick={salvar} disabled={atualizar.isPending || !telefone.trim()}>
+            {atualizar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+            Salvar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
