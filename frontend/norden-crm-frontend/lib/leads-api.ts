@@ -5,15 +5,6 @@ export type FiltrosLeads = {
   corretorId?: string;
 };
 
-/**
- * Busca os leads para o board Kanban. Não filtramos por `status` aqui —
- * trazemos tudo de uma vez e agrupamos nas colunas no cliente, já que o
- * board precisa ver todas as colunas simultaneamente.
- *
- * `pageSize: 100` é um ponto de partida razoável para o volume de uma
- * imobiliária boutique. Se o board crescer além disso, o próximo passo é
- * paginação por coluna (scroll infinito) — o backend já suporta `page`/`pageSize`.
- */
 export async function buscarLeadsDoBoard(filtros: FiltrosLeads = {}): Promise<ListaLeadsResposta> {
   const params = new URLSearchParams({ pageSize: '100' });
   if (filtros.corretorId) params.set('corretorId', filtros.corretorId);
@@ -31,8 +22,6 @@ export async function atualizarStatusLead(id: string, status: LeadStatus): Promi
 export async function listarUsuarios(): Promise<Usuario[]> {
   return apiFetch<Usuario[]>('/api/usuarios');
 }
-
-// --- Tela "Meus Leads" (tabela paginada com busca e filtros) ---
 
 export type FiltrosTabelaLeads = {
   busca?: string;
@@ -63,5 +52,18 @@ export async function transferirLead(leadId: string, corretorId: string): Promis
   return apiFetch<Lead>(`/api/leads/${leadId}/atribuir`, {
     method: 'PATCH',
     body: { corretorId },
+  });
+}
+
+export type AtualizarLeadInput = {
+  nome?: string;
+  telefone?: string;
+  email?: string;
+};
+
+export async function atualizarLead(leadId: string, input: AtualizarLeadInput): Promise<Lead> {
+  return apiFetch<Lead>(`/api/leads/${leadId}`, {
+    method: 'PATCH',
+    body: input,
   });
 }
