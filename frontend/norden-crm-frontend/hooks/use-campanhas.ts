@@ -5,6 +5,7 @@ import {
   previewPublico,
   criarCampanha,
   marcarCampanhaComoPronta,
+  iniciarEnvioCampanha,
   deletarCampanha,
   CriarCampanhaInput,
 } from '@/lib/campanhas-api';
@@ -14,6 +15,10 @@ export function useCampanhas() {
   return useQuery({
     queryKey: ['campanhas-disparo'],
     queryFn: listarCampanhas,
+    refetchInterval: (query) => {
+      const dados = query.state.data;
+      return dados?.some((c) => c.status === 'enviando') ? 5000 : false;
+    },
   });
 }
 
@@ -22,6 +27,7 @@ export function useCampanhaDetalhe(id: string | null) {
     queryKey: ['campanhas-disparo', id],
     queryFn: () => buscarCampanha(id!),
     enabled: !!id,
+    refetchInterval: (query) => (query.state.data?.status === 'enviando' ? 3000 : false),
   });
 }
 
@@ -45,6 +51,14 @@ export function useMarcarCampanhaComoPronta() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => marcarCampanhaComoPronta(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas-disparo'] }),
+  });
+}
+
+export function useIniciarEnvioCampanha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => iniciarEnvioCampanha(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas-disparo'] }),
   });
 }
