@@ -39,7 +39,7 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
   const [erro, setErro] = useState<string | null>(null);
 
   const { data: templates, isLoading: carregandoTemplates } = useTemplates();
-  const templatesAprovados = templates?.filter((t) => t.aprovadoMeta) ?? [];
+  const templatesAprovados = templates?.filter((t) => t.aprovadoMeta && t.metaTemplateName) ?? [];
 
   const { data: preview, isFetching: contandoPublico } = usePreviewPublico(filtro, aberto);
   const criar = useCriarCampanha();
@@ -92,8 +92,9 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
               <p className="text-xs text-muted-foreground">Carregando templates...</p>
             ) : templatesAprovados.length === 0 ? (
               <p className="rounded-md bg-amber-50 px-3 py-2 text-xs text-amber-800">
-                Nenhum template aprovado pela Meta ainda. Cadastre um na aba "Templates" (e marque
-                "Aprovado pela Meta" só depois que ele realmente for aprovado lá).
+                Nenhum template pronto para uso ainda. Um template só aparece aqui quando estiver
+                marcado como "Aprovado pela Meta" <strong>e</strong> tiver o "Nome do template na
+                Meta" preenchido (aba Templates) — os dois são necessários pro envio de verdade.
               </p>
             ) : (
               <Select value={templateId} onValueChange={setTemplateId}>
