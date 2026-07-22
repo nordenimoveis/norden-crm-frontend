@@ -139,4 +139,5 @@ export type CampanhaDisparoDestinatario = {
 
 export type CampanhaDisparoDetalhado = CampanhaDisparo & {
   destinatarios: CampanhaDisparoDestinatario[];
-};
+  progresso: { pendente: number; enviado: number; falhou: number };
+}; 
