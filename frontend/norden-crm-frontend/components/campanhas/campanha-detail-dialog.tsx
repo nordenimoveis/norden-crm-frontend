@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, CheckCircle2, Trash2 } from 'lucide-react';
+import { Loader2, CheckCircle2, Trash2, Send } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import {
   useCampanhaDetalhe,
   useMarcarCampanhaComoPronta,
+  useIniciarEnvioCampanha,
   useDeletarCampanha,
 } from '@/hooks/use-campanhas';
 import { ROTULO_STATUS_CAMPANHA } from '@/lib/types';
@@ -27,12 +28,20 @@ export function CampanhaDetailDialog({
 }) {
   const { data: campanha, isLoading } = useCampanhaDetalhe(campanhaId);
   const marcarPronta = useMarcarCampanhaComoPronta();
+  const iniciarEnvio = useIniciarEnvioCampanha();
   const deletar = useDeletarCampanha();
   const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const [confirmandoEnvio, setConfirmandoEnvio] = useState(false);
 
   async function confirmarPronta() {
     if (!campanha) return;
     await marcarPronta.mutateAsync(campanha.id);
+  }
+
+  async function confirmarInicioEnvio() {
+    if (!campanha) return;
+    await iniciarEnvio.mutateAsync(campanha.id);
+    setConfirmandoEnvio(false);
   }
 
   async function confirmarExclusao() {
@@ -63,6 +72,39 @@ export function CampanhaDetailDialog({
               <div className="rounded-md border border-border p-3 text-sm text-foreground">
                 {campanha.templateMensagem.conteudo}
               </div>
+
+              {(campanha.status === 'enviando' || campanha.status === 'concluida') && (
+                <div className="rounded-md border border-border p-3">
+                  <div className="mb-2 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>Progresso do envio</span>
+                    <span>
+                      {campanha.progresso.enviado + campanha.progresso.falhou} de{' '}
+                      {campanha._count.destinatarios}
+                    </span>
+                  </div>
+                  <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="bg-online"
+                      style={{
+                        width: `${(campanha.progresso.enviado / campanha._count.destinatarios) * 100}%`,
+                      }}
+                    />
+                    <div
+                      className="bg-red-400"
+                      style={{
+                        width: `${(campanha.progresso.falhou / campanha._count.destinatarios) * 100}%`,
+                      }}
+                    />
+                  </div>
+                  <div className="mt-2 flex gap-3 text-xs text-muted-foreground">
+                    <span>✓ {campanha.progresso.enviado} enviados</span>
+                    {campanha.progresso.falhou > 0 && (
+                      <span className="text-red-700">✕ {campanha.progresso.falhou} falharam</span>
+                    )}
+                    {campanha.progresso.pendente > 0 && <span>{campanha.progresso.pendente} na fila</span>}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -128,6 +170,23 @@ export function CampanhaDetailDialog({
                     )}
                     Marcar como pronta
                   </Button>
+                )}
+                {campanha.status === 'pronta' && !confirmandoEnvio && (
+                  <Button variant="accent" onClick={() => setConfirmandoEnvio(true)}>
+                    <Send className="h-4 w-4" />
+                    Iniciar envio
+                  </Button>
+                )}
+                {campanha.status === 'pronta' && confirmandoEnvio && (
+                  <>
+                    <Button variant="outline" onClick={() => setConfirmandoEnvio(false)} disabled={iniciarEnvio.isPending}>
+                      Cancelar
+                    </Button>
+                    <Button variant="accent" onClick={confirmarInicioEnvio} disabled={iniciarEnvio.isPending}>
+                      {iniciarEnvio.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                      Confirmar envio para {campanha._count.destinatarios} pessoas
+                    </Button>
+                  </>
                 )}
               </div>
             </DialogFooter>
