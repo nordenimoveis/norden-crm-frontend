@@ -88,3 +88,55 @@ export type QuickReply = {
   usuarioId: string | null;
   ativo: boolean;
 };
+// --- Templates de mensagem (WhatsApp Cloud API — usados em cadência e campanhas) ---
+
+export type TemplateMensagem = {
+  id: string;
+  nome: string;
+  conteudo: string;
+  metaTemplateName: string | null;
+  aprovadoMeta: boolean;
+  criadoEm: string;
+};
+
+// --- Campanhas de disparo em massa ---
+
+export type CampanhaDisparoStatus = 'rascunho' | 'pronta' | 'enviando' | 'concluida' | 'cancelada';
+
+export const ROTULO_STATUS_CAMPANHA: Record<CampanhaDisparoStatus, string> = {
+  rascunho: 'Rascunho',
+  pronta: 'Pronta para envio',
+  enviando: 'Enviando',
+  concluida: 'Concluída',
+  cancelada: 'Cancelada',
+};
+
+export type FiltroPublico = {
+  origem?: LeadOrigem;
+  status?: LeadStatus;
+  temperatura?: LeadTemperatura;
+  busca?: string;
+};
+
+export type CampanhaDisparo = {
+  id: string;
+  nome: string;
+  templateMensagemId: string;
+  templateMensagem: TemplateMensagem;
+  status: CampanhaDisparoStatus;
+  criadoPor: { id: string; nome: string };
+  criadoEm: string;
+  atualizadoEm: string;
+  _count: { destinatarios: number };
+};
+
+export type CampanhaDisparoDestinatario = {
+  id: string;
+  status: string;
+  enviadoEm: string | null;
+  lead: { id: string; nome: string | null; telefone: string };
+};
+
+export type CampanhaDisparoDetalhado = CampanhaDisparo & {
+  destinatarios: CampanhaDisparoDestinatario[];
+};
