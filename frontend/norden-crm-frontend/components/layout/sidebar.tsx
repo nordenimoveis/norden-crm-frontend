@@ -6,6 +6,7 @@ import {
   KanbanSquare,
   Users,
   MessageSquareText,
+  Megaphone,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -16,18 +17,22 @@ import { useAuthStore } from '@/store/auth-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const itensNavegacao = [
-  { href: '/kanban', label: 'Kanban', icone: KanbanSquare, somenteAdmin: false },
-  { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false },
-  { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false },
-  // Fase 10: estritamente admin — mesma decisão de RBAC do backend/página.
-  { href: '/configuracoes', label: 'Configurações', icone: Settings, somenteAdmin: true },
+  { href: '/kanban', label: 'Kanban', icone: KanbanSquare, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/campanhas', label: 'Campanhas', icone: Megaphone, somenteAdmin: false, somenteGestorOuAdmin: true },
+  { href: '/configuracoes', label: 'Configurações', icone: Settings, somenteAdmin: true, somenteGestorOuAdmin: false },
 ] as const;
 
 export function Sidebar() {
   const { sidebarRecolhida, alternarSidebar } = useUiStore();
   const usuario = useAuthStore((state) => state.usuario);
 
-  const itensVisiveis = itensNavegacao.filter((item) => !item.somenteAdmin || usuario?.papel === 'admin');
+  const itensVisiveis = itensNavegacao.filter((item) => {
+    if (item.somenteAdmin) return usuario?.papel === 'admin';
+    if (item.somenteGestorOuAdmin) return usuario?.papel === 'gestor' || usuario?.papel === 'admin';
+    return true;
+  });
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -37,7 +42,6 @@ export function Sidebar() {
           sidebarRecolhida ? 'w-[68px]' : 'w-64'
         )}
       >
-        {/* Wordmark */}
         <div className="flex h-16 items-center px-4">
           {sidebarRecolhida ? (
             <span className="font-display text-xl font-medium text-accent">N</span>
@@ -50,7 +54,6 @@ export function Sidebar() {
 
         <Separator />
 
-        {/* Navegação */}
         <nav className="flex-1 space-y-1 px-3 py-4">
           {itensVisiveis.map((item) => (
             <ItemNavegacao key={item.href} item={item} recolhida={sidebarRecolhida} />
@@ -59,7 +62,6 @@ export function Sidebar() {
 
         <Separator />
 
-        {/* Toggle de recolher/expandir */}
         <div className="p-3">
           <button
             onClick={alternarSidebar}
