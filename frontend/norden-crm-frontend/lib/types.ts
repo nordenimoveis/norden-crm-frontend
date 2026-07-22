@@ -8,7 +8,7 @@ export type LeadStatus =
   | 'perdido'
   | 'frio_standby';
 
-export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi';
+export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi' | 'importacao_planilha';
 
 export type LeadTemperatura = 'nao_avaliado' | 'frio' | 'morno' | 'quente';
 
