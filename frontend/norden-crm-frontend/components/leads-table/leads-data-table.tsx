@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Upload, Download } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -16,9 +16,11 @@ import { OrigemBadge } from '@/components/kanban/origem-badge';
 import { TemperaturaBadge } from '@/components/kanban/temperatura-badge';
 import { TransferirCorretorSelect } from './transferir-corretor-select';
 import { FiltrosTabela } from './filtros-tabela';
+import { ImportContactsDialog } from './import-contacts-dialog';
 import { useLeadsTabela } from '@/hooks/use-leads-tabela';
 import { useAuthStore } from '@/store/auth-store';
 import { FiltrosTabelaLeads } from '@/lib/leads-api';
+import { exportarContatos } from '@/lib/contatos-api';
 import { ROTULO_STATUS } from '@/lib/types';
 
 const TAMANHO_PAGINA = 15;
@@ -29,6 +31,8 @@ export function LeadsDataTable() {
   const ehGestorOuAdmin = usuario?.papel === 'gestor' || usuario?.papel === 'admin';
 
   const [filtros, setFiltros] = useState<FiltrosTabelaLeads>({ page: 1, pageSize: TAMANHO_PAGINA });
+  const [importAberto, setImportAberto] = useState(false);
+  const [exportando, setExportando] = useState(false);
   const { data, isLoading, isPlaceholderData } = useLeadsTabela(filtros);
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / TAMANHO_PAGINA)) : 1;
@@ -41,9 +45,33 @@ export function LeadsDataTable() {
     router.push(`/kanban?leadId=${leadId}`);
   }
 
+  async function exportar() {
+    setExportando(true);
+    try {
+      await exportarContatos();
+    } finally {
+      setExportando(false);
+    }
+  }
+
   return (
     <div className="flex h-full flex-col gap-4">
+      {ehGestorOuAdmin && (
+        <div className="flex items-center justify-end gap-2">
+          <Button variant="outline" size="sm" onClick={exportar} disabled={exportando}>
+            {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+            Exportar
+          </Button>
+          <Button variant="accent" size="sm" onClick={() => setImportAberto(true)}>
+            <Upload className="h-4 w-4" />
+            Importar
+          </Button>
+        </div>
+      )}
+
       <FiltrosTabela filtros={filtros} onMudar={atualizarFiltros} />
+
+      <ImportContactsDialog aberto={importAberto} onFechar={() => setImportAberto(false)} />
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
@@ -97,7 +125,6 @@ export function LeadsDataTable() {
             </TableBody>
           </Table>
 
-          {/* Paginação */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
               {data?.total ?? 0} lead{(data?.total ?? 0) !== 1 ? 's' : ''} encontrado
