@@ -33,6 +33,10 @@ export async function marcarCampanhaComoPronta(id: string): Promise<CampanhaDisp
   return apiFetch<CampanhaDisparo>(`/api/campanhas-disparo/${id}/marcar-pronta`, { method: 'POST' });
 }
 
+export async function iniciarEnvioCampanha(id: string): Promise<CampanhaDisparo> {
+  return apiFetch<CampanhaDisparo>(`/api/campanhas-disparo/${id}/iniciar-envio`, { method: 'POST' });
+}
+
 export async function deletarCampanha(id: string): Promise<void> {
   return apiFetch<void>(`/api/campanhas-disparo/${id}`, { method: 'DELETE' });
 }
