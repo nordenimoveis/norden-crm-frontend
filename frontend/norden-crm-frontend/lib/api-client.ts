@@ -42,7 +42,7 @@ export async function apiFetch<T = unknown>(path: string, options: ApiFetchOptio
   const { semAuth, body, headers, ...resto } = options;
 
   const headersFinais: Record<string, string> = {
-    'Content-Type': 'application/json',
+    ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     ...(headers as Record<string, string>),
   };
 
