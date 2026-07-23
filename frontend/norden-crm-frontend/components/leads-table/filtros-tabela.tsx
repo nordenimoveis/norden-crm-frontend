@@ -12,6 +12,7 @@ const ROTULO_ORIGEM_FILTRO: Record<string, string> = {
   site_imobzi: 'Site',
   legado_imobzi: 'Base Antiga',
   importacao_planilha: 'Planilha',
+  manual: 'Manual',
 };
 
 const ROTULO_TEMPERATURA_FILTRO: Record<string, string> = {
