@@ -59,11 +59,30 @@ export type AtualizarLeadInput = {
   nome?: string;
   telefone?: string;
   email?: string;
+  dataVisita?: string | null;
 };
 
 export async function atualizarLead(leadId: string, input: AtualizarLeadInput): Promise<Lead> {
   return apiFetch<Lead>(`/api/leads/${leadId}`, {
     method: 'PATCH',
+    body: input,
+  });
+}
+
+export async function buscarVisitasAgendadas(): Promise<Lead[]> {
+  return apiFetch<Lead[]>('/api/leads/visitas-agendadas');
+}
+
+export type CriarLeadManualInput = {
+  nome: string;
+  telefone: string;
+  email?: string;
+  corretorId?: string;
+};
+
+export async function criarLeadManual(input: CriarLeadManualInput): Promise<Lead> {
+  return apiFetch<Lead>('/api/leads/manual', {
+    method: 'POST',
     body: input,
   });
 }
