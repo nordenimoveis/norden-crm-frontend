@@ -26,6 +26,8 @@ export type Imovel = {
   bairro: string | null;
 };
 
+export type AlertaLead = 'aguardando_resposta' | 'sem_atividade' | null;
+
 export type Lead = {
   id: string;
   nome: string | null;
@@ -39,6 +41,8 @@ export type Lead = {
   corretor: Usuario | null;
   imovel: Imovel | null;
   criadoEm: string;
+  alerta: AlertaLead;
+  horasParado: number | null;
 };
 
 export type ListaLeadsResposta = {
