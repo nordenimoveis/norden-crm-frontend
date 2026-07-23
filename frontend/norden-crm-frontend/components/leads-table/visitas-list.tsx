@@ -1,11 +1,19 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { Loader2, MapPin, User, Clock } from 'lucide-react';
+import { Loader2, MapPin, User, Clock, Home, Users, Phone, MessageCircle, HelpCircle } from 'lucide-react';
 import { useVisitasAgendadas } from '@/hooks/use-visitas-agendadas';
 import { useAuthStore } from '@/store/auth-store';
-import { Lead } from '@/lib/types';
+import { Lead, TipoAgendamento, ROTULO_TIPO_AGENDAMENTO } from '@/lib/types';
 import { cn } from '@/lib/utils';
+
+const ICONE_TIPO: Record<TipoAgendamento, typeof Home> = {
+  visita: Home,
+  reuniao: Users,
+  ligacao: Phone,
+  whatsapp: MessageCircle,
+  outro: HelpCircle,
+};
 
 function formatarDataHora(iso: string) {
   const data = new Date(iso);
@@ -15,7 +23,7 @@ function formatarDataHora(iso: string) {
   };
 }
 
-function agruparPorUrgencia(visitas: Lead[]) {
+function agruparPorUrgencia(agendamentos: Lead[]) {
   const agora = new Date();
   const hojeFim = new Date(agora);
   hojeFim.setHours(23, 59, 59, 999);
@@ -25,18 +33,18 @@ function agruparPorUrgencia(visitas: Lead[]) {
   semanaFim.setDate(semanaFim.getDate() + 7);
 
   const grupos = {
-    atrasadas: [] as Lead[],
+    atrasados: [] as Lead[],
     hoje: [] as Lead[],
     amanha: [] as Lead[],
     semana: [] as Lead[],
     depois: [] as Lead[],
   };
 
-  for (const lead of visitas) {
-    if (!lead.dataVisita) continue;
-    const data = new Date(lead.dataVisita);
+  for (const lead of agendamentos) {
+    if (!lead.dataAgendamento) continue;
+    const data = new Date(lead.dataAgendamento);
 
-    if (data < agora) grupos.atrasadas.push(lead);
+    if (data < agora) grupos.atrasados.push(lead);
     else if (data <= hojeFim) grupos.hoje.push(lead);
     else if (data <= amanhaFim) grupos.amanha.push(lead);
     else if (data <= semanaFim) grupos.semana.push(lead);
@@ -50,59 +58,60 @@ export function VisitasList() {
   const router = useRouter();
   const usuario = useAuthStore((state) => state.usuario);
   const ehGestorOuAdmin = usuario?.papel === 'gestor' || usuario?.papel === 'admin';
-  const { data: visitas, isLoading } = useVisitasAgendadas();
+  const { data: agendamentos, isLoading } = useVisitasAgendadas();
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">
         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-        Carregando visitas...
+        Carregando agenda...
       </div>
     );
   }
 
-  if (!visitas || visitas.length === 0) {
+  if (!agendamentos || agendamentos.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border py-12 text-center text-sm text-muted-foreground">
-        Nenhuma visita agendada ainda. Marque a data/hora ao editar um lead (ícone de lápis no
-        chat) para ela aparecer aqui.
+        Nenhum compromisso agendado ainda. Marque data/hora e tipo ao editar um lead (ícone de
+        lápis no chat) para ele aparecer aqui — funciona para visita, reunião, ligação ou
+        WhatsApp, independente da coluna do Kanban.
       </div>
     );
   }
 
-  const grupos = agruparPorUrgencia(visitas);
+  const grupos = agruparPorUrgencia(agendamentos);
 
   return (
     <div className="space-y-6">
-      <GrupoVisitas
-        titulo="Atrasadas"
-        visitas={grupos.atrasadas}
+      <GrupoAgendamentos
+        titulo="Atrasados"
+        itens={grupos.atrasados}
         tom="urgente"
         ehGestorOuAdmin={ehGestorOuAdmin}
         onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
       />
-      <GrupoVisitas
+      <GrupoAgendamentos
         titulo="Hoje"
-        visitas={grupos.hoje}
+        itens={grupos.hoje}
         tom="hoje"
         ehGestorOuAdmin={ehGestorOuAdmin}
         onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
       />
-      <GrupoVisitas
+      <GrupoAgendamentos
         titulo="Amanhã"
-        visitas={grupos.amanha}
+        itens={grupos.amanha}
         ehGestorOuAdmin={ehGestorOuAdmin}
         onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
       />
-      <GrupoVisitas
+      <GrupoAgendamentos
         titulo="Esta semana"
-        visitas={grupos.semana}
+        itens={grupos.semana}
         ehGestorOuAdmin={ehGestorOuAdmin}
         onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
       />
-      <GrupoVisitas
+      <GrupoAgendamentos
         titulo="Mais adiante"
-        visitas={grupos.depois}
+        itens={grupos.depois}
         ehGestorOuAdmin={ehGestorOuAdmin}
         onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
       />
@@ -110,20 +119,20 @@ export function VisitasList() {
   );
 }
 
-function GrupoVisitas({
+function GrupoAgendamentos({
   titulo,
-  visitas,
+  itens,
   tom,
   ehGestorOuAdmin,
   onAbrir,
 }: {
   titulo: string;
-  visitas: Lead[];
+  itens: Lead[];
   tom?: 'urgente' | 'hoje';
   ehGestorOuAdmin: boolean;
   onAbrir: (leadId: string) => void;
 }) {
-  if (visitas.length === 0) return null;
+  if (itens.length === 0) return null;
 
   return (
     <div>
@@ -133,11 +142,14 @@ function GrupoVisitas({
           tom === 'urgente' ? 'text-red-700' : tom === 'hoje' ? 'text-accent' : 'text-foreground'
         )}
       >
-        {titulo} ({visitas.length})
+        {titulo} ({itens.length})
       </h2>
       <div className="divide-y divide-border rounded-lg border border-border">
-        {visitas.map((lead) => {
-          const { dia, hora } = formatarDataHora(lead.dataVisita!);
+        {itens.map((lead) => {
+          const { dia, hora } = formatarDataHora(lead.dataAgendamento!);
+          const tipo = lead.tipoAgendamento ?? 'outro';
+          const IconeTipo = ICONE_TIPO[tipo];
+
           return (
             <button
               key={lead.id}
@@ -157,6 +169,10 @@ function GrupoVisitas({
                   {lead.nome || lead.telefone}
                 </p>
                 <div className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span className="flex items-center gap-1">
+                    <IconeTipo className="h-3 w-3" />
+                    {ROTULO_TIPO_AGENDAMENTO[tipo]}
+                  </span>
                   {lead.imovel?.bairro && (
                     <span className="flex items-center gap-1">
                       <MapPin className="h-3 w-3" />
