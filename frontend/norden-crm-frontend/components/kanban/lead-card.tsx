@@ -1,12 +1,20 @@
 'use client';
 
 import { useDraggable } from '@dnd-kit/core';
-import { MapPin, AlertCircle, CalendarClock } from 'lucide-react';
-import { Lead } from '@/lib/types';
+import { MapPin, AlertCircle, Home, Users, Phone, MessageCircle, HelpCircle } from 'lucide-react';
+import { Lead, TipoAgendamento, ROTULO_TIPO_AGENDAMENTO } from '@/lib/types';
 import { OrigemBadge } from './origem-badge';
 import { TemperaturaBadge } from './temperatura-badge';
 import { AlertaEstagnadoBadge } from './alerta-estagnado-badge';
 import { cn } from '@/lib/utils';
+
+const ICONE_TIPO: Record<TipoAgendamento, typeof Home> = {
+  visita: Home,
+  reuniao: Users,
+  ligacao: Phone,
+  whatsapp: MessageCircle,
+  outro: HelpCircle,
+};
 
 function iniciais(nome: string) {
   return nome
@@ -25,6 +33,8 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
 
   const nomeExibicao = lead.nome || lead.telefone;
   const respondeuRecentemente = lead.status === 'respondeu' && lead.atendimentoHumano;
+  const tipoAgendamento = lead.tipoAgendamento ?? 'outro';
+  const IconeAgendamento = ICONE_TIPO[tipoAgendamento];
 
   return (
     <div
@@ -73,15 +83,16 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
         </div>
       )}
 
-      {lead.status === 'visita_agendada' && lead.dataVisita && (
+      {lead.dataAgendamento && (
         <div className="mt-2 flex items-center gap-1 text-xs font-medium text-accent">
-          <CalendarClock className="h-3 w-3" />
-          {new Date(lead.dataVisita).toLocaleDateString('pt-BR', {
+          <IconeAgendamento className="h-3 w-3" />
+          {ROTULO_TIPO_AGENDAMENTO[tipoAgendamento]}:{' '}
+          {new Date(lead.dataAgendamento).toLocaleDateString('pt-BR', {
             day: '2-digit',
             month: '2-digit',
           })}{' '}
           às{' '}
-          {new Date(lead.dataVisita).toLocaleTimeString('pt-BR', {
+          {new Date(lead.dataAgendamento).toLocaleTimeString('pt-BR', {
             hour: '2-digit',
             minute: '2-digit',
           })}
