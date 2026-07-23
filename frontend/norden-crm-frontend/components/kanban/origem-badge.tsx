@@ -5,6 +5,7 @@ const config: Record<LeadOrigem, { label: string }> = {
   site_imobzi: { label: 'Site' },
   legado_imobzi: { label: 'Base Antiga' },
   importacao_planilha: { label: 'Planilha' },
+  manual: { label: 'Manual' },
 };
 
 export function OrigemBadge({ origem }: { origem: LeadOrigem }) {
