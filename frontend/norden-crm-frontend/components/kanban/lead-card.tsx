@@ -1,7 +1,7 @@
 'use client';
 
 import { useDraggable } from '@dnd-kit/core';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { MapPin, AlertCircle, CalendarClock } from 'lucide-react';
 import { Lead } from '@/lib/types';
 import { OrigemBadge } from './origem-badge';
 import { TemperaturaBadge } from './temperatura-badge';
@@ -70,6 +70,21 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
         <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
           <MapPin className="h-3 w-3" />
           {lead.imovel.bairro}
+        </div>
+      )}
+
+      {lead.status === 'visita_agendada' && lead.dataVisita && (
+        <div className="mt-2 flex items-center gap-1 text-xs font-medium text-accent">
+          <CalendarClock className="h-3 w-3" />
+          {new Date(lead.dataVisita).toLocaleDateString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+          })}{' '}
+          às{' '}
+          {new Date(lead.dataVisita).toLocaleTimeString('pt-BR', {
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
         </div>
       )}
 
