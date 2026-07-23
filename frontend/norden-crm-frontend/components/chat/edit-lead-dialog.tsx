@@ -13,8 +13,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAtualizarLead } from '@/hooks/use-atualizar-lead';
-import { LeadDetalhado } from '@/lib/types';
+import { LeadDetalhado, TipoAgendamento, ROTULO_TIPO_AGENDAMENTO } from '@/lib/types';
 
 function paraDatetimeLocal(iso: string | null): string {
   if (!iso) return '';
@@ -35,7 +36,8 @@ export function EditLeadDialog({
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
-  const [dataVisita, setDataVisita] = useState('');
+  const [dataAgendamento, setDataAgendamento] = useState('');
+  const [tipoAgendamento, setTipoAgendamento] = useState<TipoAgendamento | ''>('');
   const [erro, setErro] = useState<string | null>(null);
 
   const atualizar = useAtualizarLead(lead.id);
@@ -45,7 +47,8 @@ export function EditLeadDialog({
     setNome(lead.nome ?? '');
     setTelefone(lead.telefone);
     setEmail(lead.email ?? '');
-    setDataVisita(paraDatetimeLocal(lead.dataVisita));
+    setDataAgendamento(paraDatetimeLocal(lead.dataAgendamento));
+    setTipoAgendamento(lead.tipoAgendamento ?? '');
     setErro(null);
   }, [aberto, lead]);
 
@@ -56,7 +59,8 @@ export function EditLeadDialog({
         nome: nome.trim() || undefined,
         telefone: telefone.trim(),
         email: email.trim() || undefined,
-        dataVisita: dataVisita ? new Date(dataVisita).toISOString() : null,
+        dataAgendamento: dataAgendamento ? new Date(dataAgendamento).toISOString() : null,
+        tipoAgendamento: dataAgendamento ? (tipoAgendamento || 'visita') : null,
       });
       onFechar();
     } catch {
@@ -93,19 +97,37 @@ export function EditLeadDialog({
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="edit-visita" className="flex items-center gap-1.5">
+            <Label htmlFor="edit-agendamento" className="flex items-center gap-1.5">
               <CalendarClock className="h-3.5 w-3.5" />
-              Data e hora da visita
+              Próximo compromisso
             </Label>
-            <Input
-              id="edit-visita"
-              type="datetime-local"
-              value={dataVisita}
-              onChange={(e) => setDataVisita(e.target.value)}
-            />
+            <div className="grid grid-cols-2 gap-2">
+              <Input
+                id="edit-agendamento"
+                type="datetime-local"
+                value={dataAgendamento}
+                onChange={(e) => setDataAgendamento(e.target.value)}
+              />
+              <Select
+                value={tipoAgendamento || 'visita'}
+                onValueChange={(v) => setTipoAgendamento(v as TipoAgendamento)}
+                disabled={!dataAgendamento}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {Object.entries(ROTULO_TIPO_AGENDAMENTO).map(([valor, rotulo]) => (
+                    <SelectItem key={valor} value={valor}>
+                      {rotulo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <p className="text-xs text-muted-foreground">
-              Aparece na lista "Próximas Visitas". Deixe em branco pra remover uma visita já
-              marcada.
+              Aparece na aba "Agenda" — independente da coluna do Kanban em que o lead está.
+              Deixe a data em branco pra remover um compromisso já marcado.
             </p>
           </div>
 
