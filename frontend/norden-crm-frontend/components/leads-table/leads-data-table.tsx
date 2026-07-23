@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Loader2, Upload, Download } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Upload, Download, UserPlus } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -18,6 +18,7 @@ import { AlertaEstagnadoBadge } from '@/components/kanban/alerta-estagnado-badge
 import { TransferirCorretorSelect } from './transferir-corretor-select';
 import { FiltrosTabela } from './filtros-tabela';
 import { ImportContactsDialog } from './import-contacts-dialog';
+import { NovoLeadDialog } from './novo-lead-dialog';
 import { useLeadsTabela } from '@/hooks/use-leads-tabela';
 import { useAuthStore } from '@/store/auth-store';
 import { FiltrosTabelaLeads } from '@/lib/leads-api';
@@ -33,6 +34,7 @@ export function LeadsDataTable() {
 
   const [filtros, setFiltros] = useState<FiltrosTabelaLeads>({ page: 1, pageSize: TAMANHO_PAGINA });
   const [importAberto, setImportAberto] = useState(false);
+  const [novoLeadAberto, setNovoLeadAberto] = useState(false);
   const [exportando, setExportando] = useState(false);
   const { data, isLoading, isPlaceholderData } = useLeadsTabela(filtros);
 
@@ -57,21 +59,29 @@ export function LeadsDataTable() {
 
   return (
     <div className="flex h-full flex-col gap-4">
-      {ehGestorOuAdmin && (
-        <div className="flex items-center justify-end gap-2">
-          <Button variant="outline" size="sm" onClick={exportar} disabled={exportando}>
-            {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Exportar
-          </Button>
-          <Button variant="accent" size="sm" onClick={() => setImportAberto(true)}>
-            <Upload className="h-4 w-4" />
-            Importar
-          </Button>
-        </div>
-      )}
+      <div className="flex items-center justify-between gap-2">
+        <Button variant="accent" size="sm" onClick={() => setNovoLeadAberto(true)}>
+          <UserPlus className="h-4 w-4" />
+          Novo Lead
+        </Button>
+
+        {ehGestorOuAdmin && (
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={exportar} disabled={exportando}>
+              {exportando ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Exportar
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setImportAberto(true)}>
+              <Upload className="h-4 w-4" />
+              Importar
+            </Button>
+          </div>
+        )}
+      </div>
 
       <FiltrosTabela filtros={filtros} onMudar={atualizarFiltros} />
 
+      <NovoLeadDialog aberto={novoLeadAberto} onFechar={() => setNovoLeadAberto(false)} />
       <ImportContactsDialog aberto={importAberto} onFechar={() => setImportAberto(false)} />
 
       {isLoading ? (
