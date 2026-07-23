@@ -14,6 +14,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { OrigemBadge } from '@/components/kanban/origem-badge';
 import { TemperaturaBadge } from '@/components/kanban/temperatura-badge';
+import { AlertaEstagnadoBadge } from '@/components/kanban/alerta-estagnado-badge';
 import { TransferirCorretorSelect } from './transferir-corretor-select';
 import { FiltrosTabela } from './filtros-tabela';
 import { ImportContactsDialog } from './import-contacts-dialog';
@@ -88,13 +89,14 @@ export function LeadsDataTable() {
                 <TableHead>Status</TableHead>
                 <TableHead>Origem</TableHead>
                 <TableHead>Temperatura</TableHead>
+                <TableHead>Alerta</TableHead>
                 {ehGestorOuAdmin && <TableHead>Corretor</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={ehGestorOuAdmin ? 6 : 5} className="text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={ehGestorOuAdmin ? 7 : 6} className="text-center text-sm text-muted-foreground">
                     Nenhum lead encontrado com esses filtros.
                   </TableCell>
                 </TableRow>
@@ -114,6 +116,9 @@ export function LeadsDataTable() {
                   </TableCell>
                   <TableCell>
                     <TemperaturaBadge temperatura={lead.temperatura} />
+                  </TableCell>
+                  <TableCell>
+                    <AlertaEstagnadoBadge alerta={lead.alerta} horasParado={lead.horasParado} />
                   </TableCell>
                   {ehGestorOuAdmin && (
                     <TableCell>
