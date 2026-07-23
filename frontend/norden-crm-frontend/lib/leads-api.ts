@@ -1,5 +1,5 @@
 import { apiFetch } from './api-client';
-import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario } from './types';
+import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario, TipoAgendamento } from './types';
 
 export type FiltrosLeads = {
   corretorId?: string;
@@ -59,7 +59,8 @@ export type AtualizarLeadInput = {
   nome?: string;
   telefone?: string;
   email?: string;
-  dataVisita?: string | null;
+  dataAgendamento?: string | null;
+  tipoAgendamento?: TipoAgendamento | null;
 };
 
 export async function atualizarLead(leadId: string, input: AtualizarLeadInput): Promise<Lead> {
@@ -69,8 +70,8 @@ export async function atualizarLead(leadId: string, input: AtualizarLeadInput): 
   });
 }
 
-export async function buscarVisitasAgendadas(): Promise<Lead[]> {
-  return apiFetch<Lead[]>('/api/leads/visitas-agendadas');
+export async function buscarAgendamentos(): Promise<Lead[]> {
+  return apiFetch<Lead[]>('/api/leads/agendamentos');
 }
 
 export type CriarLeadManualInput = {
