@@ -5,6 +5,7 @@ import { MapPin, AlertCircle } from 'lucide-react';
 import { Lead } from '@/lib/types';
 import { OrigemBadge } from './origem-badge';
 import { TemperaturaBadge } from './temperatura-badge';
+import { AlertaEstagnadoBadge } from './alerta-estagnado-badge';
 import { cn } from '@/lib/utils';
 
 function iniciais(nome: string) {
@@ -23,7 +24,7 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
   });
 
   const nomeExibicao = lead.nome || lead.telefone;
-  const aguardandoResposta = lead.status === 'respondeu' && lead.atendimentoHumano;
+  const respondeuRecentemente = lead.status === 'respondeu' && lead.atendimentoHumano;
 
   return (
     <div
@@ -41,12 +42,20 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
         isDragging && 'z-10 opacity-60 shadow-lg'
       )}
     >
-      {aguardandoResposta && (
+      {lead.alerta === 'aguardando_resposta' ? (
+        <div className="mb-2">
+          <AlertaEstagnadoBadge alerta={lead.alerta} horasParado={lead.horasParado} />
+        </div>
+      ) : respondeuRecentemente ? (
         <div className="mb-2 flex items-center gap-1.5 rounded-md bg-red-50 px-2 py-1 text-[11px] font-medium text-red-700">
           <AlertCircle className="h-3 w-3" />
           Aguardando Resposta
         </div>
-      )}
+      ) : lead.alerta === 'sem_atividade' ? (
+        <div className="mb-2">
+          <AlertaEstagnadoBadge alerta={lead.alerta} horasParado={lead.horasParado} />
+        </div>
+      ) : null}
 
       <div className="flex items-start justify-between gap-2">
         <div className="flex min-w-0 items-center gap-2">
