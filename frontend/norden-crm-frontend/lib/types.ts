@@ -8,7 +8,7 @@ export type LeadStatus =
   | 'perdido'
   | 'frio_standby';
 
-export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi' | 'importacao_planilha';
+export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi' | 'importacao_planilha' | 'manual';
 
 export type LeadTemperatura = 'nao_avaliado' | 'frio' | 'morno' | 'quente';
 
@@ -28,6 +28,16 @@ export type Imovel = {
 
 export type AlertaLead = 'aguardando_resposta' | 'sem_atividade' | null;
 
+export type TipoAgendamento = 'visita' | 'reuniao' | 'ligacao' | 'whatsapp' | 'outro';
+
+export const ROTULO_TIPO_AGENDAMENTO: Record<TipoAgendamento, string> = {
+  visita: 'Visita',
+  reuniao: 'Reunião',
+  ligacao: 'Ligação',
+  whatsapp: 'WhatsApp',
+  outro: 'Outro',
+};
+
 export type Lead = {
   id: string;
   nome: string | null;
@@ -43,7 +53,8 @@ export type Lead = {
   criadoEm: string;
   alerta: AlertaLead;
   horasParado: number | null;
-  dataVisita: string | null;
+  dataAgendamento: string | null;
+  tipoAgendamento: TipoAgendamento | null;
 };
 
 export type ListaLeadsResposta = {
@@ -67,7 +78,6 @@ export type Mensagem = {
   criadoEm: string;
 };
 
-// GET /api/leads/:id retorna o lead + histórico de mensagens
 export type LeadDetalhado = Lead & {
   mensagens: Mensagem[];
 };
@@ -93,7 +103,6 @@ export type QuickReply = {
   usuarioId: string | null;
   ativo: boolean;
 };
-// --- Templates de mensagem (WhatsApp Cloud API — usados em cadência e campanhas) ---
 
 export type TemplateMensagem = {
   id: string;
@@ -103,8 +112,6 @@ export type TemplateMensagem = {
   aprovadoMeta: boolean;
   criadoEm: string;
 };
-
-// --- Campanhas de disparo em massa ---
 
 export type CampanhaDisparoStatus = 'rascunho' | 'pronta' | 'enviando' | 'concluida' | 'cancelada';
 
@@ -145,4 +152,4 @@ export type CampanhaDisparoDestinatario = {
 export type CampanhaDisparoDetalhado = CampanhaDisparo & {
   destinatarios: CampanhaDisparoDestinatario[];
   progresso: { pendente: number; enviado: number; falhou: number };
-}; 
+};
