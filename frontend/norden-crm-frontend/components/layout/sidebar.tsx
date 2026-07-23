@@ -7,6 +7,7 @@ import {
   Users,
   MessageSquareText,
   Megaphone,
+  CalendarClock,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -19,6 +20,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 const itensNavegacao = [
   { href: '/kanban', label: 'Kanban', icone: KanbanSquare, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/visitas', label: 'Visitas', icone: CalendarClock, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/campanhas', label: 'Campanhas', icone: Megaphone, somenteAdmin: false, somenteGestorOuAdmin: true },
   { href: '/configuracoes', label: 'Configurações', icone: Settings, somenteAdmin: true, somenteGestorOuAdmin: false },
