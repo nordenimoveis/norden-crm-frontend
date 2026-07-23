@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, CalendarClock } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,6 +16,13 @@ import { Label } from '@/components/ui/label';
 import { useAtualizarLead } from '@/hooks/use-atualizar-lead';
 import { LeadDetalhado } from '@/lib/types';
 
+function paraDatetimeLocal(iso: string | null): string {
+  if (!iso) return '';
+  const data = new Date(iso);
+  const offset = data.getTimezoneOffset() * 60000;
+  return new Date(data.getTime() - offset).toISOString().slice(0, 16);
+}
+
 export function EditLeadDialog({
   lead,
   aberto,
@@ -28,6 +35,7 @@ export function EditLeadDialog({
   const [nome, setNome] = useState('');
   const [telefone, setTelefone] = useState('');
   const [email, setEmail] = useState('');
+  const [dataVisita, setDataVisita] = useState('');
   const [erro, setErro] = useState<string | null>(null);
 
   const atualizar = useAtualizarLead(lead.id);
@@ -37,6 +45,7 @@ export function EditLeadDialog({
     setNome(lead.nome ?? '');
     setTelefone(lead.telefone);
     setEmail(lead.email ?? '');
+    setDataVisita(paraDatetimeLocal(lead.dataVisita));
     setErro(null);
   }, [aberto, lead]);
 
@@ -47,6 +56,7 @@ export function EditLeadDialog({
         nome: nome.trim() || undefined,
         telefone: telefone.trim(),
         email: email.trim() || undefined,
+        dataVisita: dataVisita ? new Date(dataVisita).toISOString() : null,
       });
       onFechar();
     } catch {
@@ -80,6 +90,23 @@ export function EditLeadDialog({
           <div className="space-y-1.5">
             <Label htmlFor="edit-email">E-mail</Label>
             <Input id="edit-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="edit-visita" className="flex items-center gap-1.5">
+              <CalendarClock className="h-3.5 w-3.5" />
+              Data e hora da visita
+            </Label>
+            <Input
+              id="edit-visita"
+              type="datetime-local"
+              value={dataVisita}
+              onChange={(e) => setDataVisita(e.target.value)}
+            />
+            <p className="text-xs text-muted-foreground">
+              Aparece na lista "Próximas Visitas". Deixe em branco pra remover uma visita já
+              marcada.
+            </p>
           </div>
 
           {erro && (
