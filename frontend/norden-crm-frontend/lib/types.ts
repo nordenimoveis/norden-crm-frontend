@@ -43,6 +43,7 @@ export type Lead = {
   criadoEm: string;
   alerta: AlertaLead;
   horasParado: number | null;
+  dataVisita: string | null;
 };
 
 export type ListaLeadsResposta = {
