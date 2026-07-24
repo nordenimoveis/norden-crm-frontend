@@ -102,6 +102,7 @@ export type QuickReply = {
   tipo: QuickReplyTipo;
   usuarioId: string | null;
   ativo: boolean;
+  paraAvaliacaoGoogle: boolean;
 };
 
 export type TemplateMensagem = {
