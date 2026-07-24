@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, Trash2, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, Loader2, Star } from 'lucide-react';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
 import { useDeletarQuickReply } from '@/hooks/use-quick-reply-mutations';
 import { useAuthStore } from '@/store/auth-store';
@@ -16,7 +16,7 @@ export function ScriptsList({ onEditar }: { onEditar: (item: QuickReply) => void
 
   function podeEditar(item: QuickReply) {
     if (!usuario) return false;
-    if (usuario.papel !== 'corretor') return true; // gestor/admin edita qualquer um
+    if (usuario.papel !== 'corretor') return true;
     return item.tipo === 'pessoal' && item.usuarioId === usuario.id;
   }
 
@@ -58,6 +58,15 @@ export function ScriptsList({ onEditar }: { onEditar: (item: QuickReply) => void
                 >
                   {item.tipo === 'global' ? 'Global' : 'Pessoal'}
                 </span>
+                {item.paraAvaliacaoGoogle && (
+                  <span
+                    className="flex shrink-0 items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-800"
+                    title="Sugerido automaticamente ao fechar negócio"
+                  >
+                    <Star className="h-3 w-3" />
+                    Avaliação Google
+                  </span>
+                )}
               </div>
               <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{item.textoMensagem}</p>
             </div>
