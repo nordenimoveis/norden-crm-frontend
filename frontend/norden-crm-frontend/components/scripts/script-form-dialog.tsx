@@ -15,6 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 import { useCriarQuickReply, useAtualizarQuickReply } from '@/hooks/use-quick-reply-mutations';
 import { useAuthStore } from '@/store/auth-store';
 import { QuickReply, QuickReplyTipo } from '@/lib/types';
@@ -34,18 +35,19 @@ export function ScriptFormDialog({
   const [titulo, setTitulo] = useState('');
   const [textoMensagem, setTextoMensagem] = useState('');
   const [tipo, setTipo] = useState<QuickReplyTipo>('pessoal');
+  const [paraAvaliacaoGoogle, setParaAvaliacaoGoogle] = useState(false);
 
   const criar = useCriarQuickReply();
   const atualizar = useAtualizarQuickReply();
   const emAndamento = criar.isPending || atualizar.isPending;
   const estaEditando = !!quickReplyEditando;
 
-  // Repopula o formulário sempre que o dialog abre (criação limpa, edição pré-preenchida)
   useEffect(() => {
     if (!aberto) return;
     setTitulo(quickReplyEditando?.titulo ?? '');
     setTextoMensagem(quickReplyEditando?.textoMensagem ?? '');
     setTipo(quickReplyEditando?.tipo ?? 'pessoal');
+    setParaAvaliacaoGoogle(quickReplyEditando?.paraAvaliacaoGoogle ?? false);
   }, [aberto, quickReplyEditando]);
 
   async function salvar() {
@@ -54,7 +56,7 @@ export function ScriptFormDialog({
     if (estaEditando) {
       await atualizar.mutateAsync({
         id: quickReplyEditando!.id,
-        input: { titulo, textoMensagem },
+        input: { titulo, textoMensagem, paraAvaliacaoGoogle },
       });
     } else {
       await criar.mutateAsync({ titulo, textoMensagem, tipo });
@@ -101,7 +103,6 @@ export function ScriptFormDialog({
             </p>
           </div>
 
-          {/* Tipo só é escolhido na criação — depois de criado, é imutável (mesma regra do backend) */}
           {!estaEditando && (
             <div className="space-y-1.5">
               <Label>Visibilidade</Label>
@@ -121,6 +122,18 @@ export function ScriptFormDialog({
                   são criados por gestor/admin.
                 </p>
               )}
+            </div>
+          )}
+
+          {estaEditando && podeGlobal && quickReplyEditando?.tipo === 'global' && (
+            <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
+              <div>
+                <p className="text-sm font-medium text-foreground">Pedido de avaliação Google</p>
+                <p className="text-xs text-muted-foreground">
+                  Sugerido automaticamente quando um lead vira "Negócio Fechado" no Kanban.
+                </p>
+              </div>
+              <Switch checked={paraAvaliacaoGoogle} onCheckedChange={setParaAvaliacaoGoogle} />
             </div>
           )}
         </div>
