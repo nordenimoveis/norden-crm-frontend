@@ -7,11 +7,13 @@ import { useAuthStore } from '@/store/auth-store';
 import { useLeadsDoBoard } from '@/hooks/use-leads';
 import { useAtualizarStatusLead } from '@/hooks/use-atualizar-status-lead';
 import { usePusherKanban } from '@/hooks/use-pusher-kanban';
+import { useQuickReplies } from '@/hooks/use-quick-replies';
 import { Lead, LeadStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { KanbanColumn, ColunaConfig } from './column';
 import { FiltroCorretor } from './corretor-filter';
 import { NovoLeadDialog } from '@/components/leads-table/novo-lead-dialog';
+import { AvaliacaoGoogleDialog } from './avaliacao-google-dialog';
 
 const COLUNAS: ColunaConfig[] = [
   { status: 'novo', titulo: 'Novo Lead' },
@@ -30,11 +32,15 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
 
   const [corretorId, setCorretorId] = useState<string | undefined>(undefined);
   const [novoLeadAberto, setNovoLeadAberto] = useState(false);
+  const [leadFechado, setLeadFechado] = useState<{ id: string; nome: string | null } | null>(null);
   const filtros = { corretorId };
 
   const { data, isLoading } = useLeadsDoBoard(filtros);
   const { mutate: moverLead } = useAtualizarStatusLead(filtros);
   usePusherKanban();
+
+  const { data: quickReplies } = useQuickReplies('', true);
+  const quickReplyAvaliacao = quickReplies?.find((qr) => qr.paraAvaliacaoGoogle) ?? null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -63,6 +69,11 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
     if (novoStatus === statusAtual) return;
 
     moverLead({ leadId, novoStatus });
+
+    if (novoStatus === 'negocio_fechado' && quickReplyAvaliacao) {
+      const lead = data?.items.find((l) => l.id === leadId);
+      setLeadFechado({ id: leadId, nome: lead?.nome ?? null });
+    }
   }
 
   return (
@@ -84,6 +95,13 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
       </div>
 
       <NovoLeadDialog aberto={novoLeadAberto} onFechar={() => setNovoLeadAberto(false)} />
+
+      <AvaliacaoGoogleDialog
+        leadId={leadFechado?.id ?? null}
+        leadNome={leadFechado?.nome ?? null}
+        textoTemplate={quickReplyAvaliacao?.textoMensagem ?? null}
+        onFechar={() => setLeadFechado(null)}
+      />
 
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
