@@ -9,6 +9,7 @@ export type CriarQuickReplyInput = {
 
 export type AtualizarQuickReplyInput = Partial<Pick<CriarQuickReplyInput, 'titulo' | 'textoMensagem'>> & {
   ativo?: boolean;
+  paraAvaliacaoGoogle?: boolean;
 };
 
 export async function criarQuickReply(input: CriarQuickReplyInput): Promise<QuickReply> {
