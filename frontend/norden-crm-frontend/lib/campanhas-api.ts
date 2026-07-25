@@ -1,10 +1,14 @@
 import { apiFetch } from './api-client';
-import { CampanhaDisparo, CampanhaDisparoDetalhado, FiltroPublico } from './types';
+import { lerCookieToken } from './auth-cookie';
+import { CampanhaDisparo, CampanhaDisparoDetalhado, FiltroPublico, MidiaTipo } from './types';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type CriarCampanhaInput = {
   nome: string;
   templateMensagemId: string;
   filtroPublico: FiltroPublico;
+  midiaUrl?: string;
 };
 
 export async function listarCampanhas(): Promise<CampanhaDisparo[]> {
@@ -39,4 +43,25 @@ export async function iniciarEnvioCampanha(id: string): Promise<CampanhaDisparo>
 
 export async function deletarCampanha(id: string): Promise<void> {
   return apiFetch<void>(`/api/campanhas-disparo/${id}`, { method: 'DELETE' });
+}
+
+export type ResultadoUploadMidia = { url: string; tipo: MidiaTipo };
+
+export async function uploadMidiaCampanha(arquivo: File): Promise<ResultadoUploadMidia> {
+  const token = lerCookieToken();
+  const formData = new FormData();
+  formData.append('file', arquivo);
+
+  const response = await fetch(`${API_URL}/api/campanhas-disparo/upload-midia`, {
+    method: 'POST',
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    const erro = await response.json().catch(() => ({}));
+    throw new Error(erro.message ?? 'Falha ao enviar o arquivo');
+  }
+
+  return response.json();
 }
