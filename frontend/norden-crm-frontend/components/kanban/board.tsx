@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { DndContext, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { UserPlus } from 'lucide-react';
 import { useAuthStore } from '@/store/auth-store';
 import { useLeadsDoBoard } from '@/hooks/use-leads';
@@ -11,6 +11,7 @@ import { useQuickReplies } from '@/hooks/use-quick-replies';
 import { Lead, LeadStatus } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { KanbanColumn, ColunaConfig } from './column';
+import { LeadCard } from './lead-card';
 import { FiltroCorretor } from './corretor-filter';
 import { NovoLeadDialog } from '@/components/leads-table/novo-lead-dialog';
 import { AvaliacaoGoogleDialog } from './avaliacao-google-dialog';
@@ -33,6 +34,7 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
   const [corretorId, setCorretorId] = useState<string | undefined>(undefined);
   const [novoLeadAberto, setNovoLeadAberto] = useState(false);
   const [leadFechado, setLeadFechado] = useState<{ id: string; nome: string | null } | null>(null);
+  const [leadArrastandoId, setLeadArrastandoId] = useState<string | null>(null);
   const filtros = { corretorId };
 
   const { data, isLoading } = useLeadsDoBoard(filtros);
@@ -58,7 +60,13 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
     return mapa;
   }, [data]);
 
+  function aoIniciarDrag(evento: DragStartEvent) {
+    setLeadArrastandoId(evento.active.id as string);
+  }
+
   function aoTerminarDrag(evento: DragEndEvent) {
+    setLeadArrastandoId(null);
+
     const { active, over } = evento;
     if (!over) return;
 
@@ -75,6 +83,10 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
       setLeadFechado({ id: leadId, nome: lead?.nome ?? null });
     }
   }
+
+  const leadArrastando = leadArrastandoId
+    ? (data?.items.find((l) => l.id === leadArrastandoId) ?? null)
+    : null;
 
   return (
     <div className="flex h-full flex-col">
@@ -108,7 +120,7 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
           Carregando leads...
         </div>
       ) : (
-        <DndContext sensors={sensors} onDragEnd={aoTerminarDrag}>
+        <DndContext sensors={sensors} onDragStart={aoIniciarDrag} onDragEnd={aoTerminarDrag}>
           <div className="flex flex-1 gap-4 overflow-x-auto pb-2">
             {COLUNAS.map((coluna) => (
               <KanbanColumn
@@ -119,6 +131,14 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
               />
             ))}
           </div>
+
+          <DragOverlay>
+            {leadArrastando ? (
+              <div className="rotate-2 opacity-90">
+                <LeadCard lead={leadArrastando} onAbrir={() => {}} />
+              </div>
+            ) : null}
+          </DragOverlay>
         </DndContext>
       )}
     </div>
