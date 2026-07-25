@@ -105,12 +105,21 @@ export type QuickReply = {
   paraAvaliacaoGoogle: boolean;
 };
 
+export type MidiaTipo = 'image' | 'video' | 'document';
+
+export const ROTULO_MIDIA_TIPO: Record<MidiaTipo, string> = {
+  image: 'Imagem',
+  video: 'Vídeo',
+  document: 'Documento (PDF)',
+};
+
 export type TemplateMensagem = {
   id: string;
   nome: string;
   conteudo: string;
   metaTemplateName: string | null;
   aprovadoMeta: boolean;
+  midiaTipo: MidiaTipo | null;
   criadoEm: string;
 };
 
@@ -137,6 +146,7 @@ export type CampanhaDisparo = {
   templateMensagemId: string;
   templateMensagem: TemplateMensagem;
   status: CampanhaDisparoStatus;
+  midiaUrl: string | null;
   criadoPor: { id: string; nome: string };
   criadoEm: string;
   atualizadoEm: string;
