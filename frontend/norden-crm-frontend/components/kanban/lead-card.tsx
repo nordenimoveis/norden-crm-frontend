@@ -26,7 +26,7 @@ function iniciais(nome: string) {
 }
 
 export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: string) => void }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: lead.id,
     data: { status: lead.status },
   });
@@ -42,14 +42,9 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
       {...listeners}
       {...attributes}
       onClick={() => onAbrir(lead.id)}
-      style={
-        transform
-          ? { transform: `translate3d(${transform.x}px, ${transform.y}px, 0)` }
-          : undefined
-      }
       className={cn(
         'group cursor-pointer rounded-lg border border-border bg-card p-3 shadow-sm transition-shadow hover:shadow-md',
-        isDragging && 'z-10 opacity-60 shadow-lg'
+        isDragging && 'opacity-40'
       )}
     >
       {lead.alerta === 'aguardando_resposta' ? (
