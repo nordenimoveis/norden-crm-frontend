@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Loader2, Users, AlertTriangle } from 'lucide-react';
+import { Loader2, Users, AlertTriangle, Upload, CheckCircle2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -16,13 +16,15 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTemplates } from '@/hooks/use-templates';
 import { useCriarCampanha, usePreviewPublico } from '@/hooks/use-campanhas';
-import { FiltroPublico } from '@/lib/types';
+import { uploadMidiaCampanha } from '@/lib/campanhas-api';
+import { FiltroPublico, ROTULO_MIDIA_TIPO } from '@/lib/types';
 
 const ROTULO_ORIGEM: Record<string, string> = {
   meta_ads: 'Meta Ads',
   site_imobzi: 'Site',
   legado_imobzi: 'Base Antiga',
   importacao_planilha: 'Planilha',
+  manual: 'Manual',
 };
 
 const ROTULO_TEMPERATURA: Record<string, string> = {
@@ -37,9 +39,13 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
   const [templateId, setTemplateId] = useState<string>('');
   const [filtro, setFiltro] = useState<FiltroPublico>({});
   const [erro, setErro] = useState<string | null>(null);
+  const [enviandoArquivo, setEnviandoArquivo] = useState(false);
+  const [midiaUrl, setMidiaUrl] = useState<string | null>(null);
+  const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
 
   const { data: templates, isLoading: carregandoTemplates } = useTemplates();
   const templatesAprovados = templates?.filter((t) => t.aprovadoMeta && t.metaTemplateName) ?? [];
+  const templateSelecionado = templatesAprovados.find((t) => t.id === templateId) ?? null;
 
   const { data: preview, isFetching: contandoPublico } = usePreviewPublico(filtro, aberto);
   const criar = useCriarCampanha();
@@ -49,20 +55,54 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
     setTemplateId('');
     setFiltro({});
     setErro(null);
+    setMidiaUrl(null);
+    setNomeArquivo(null);
     onFechar();
+  }
+
+  function mudarTemplate(novoId: string) {
+    setTemplateId(novoId);
+    setMidiaUrl(null);
+    setNomeArquivo(null);
+  }
+
+  async function aoEscolherArquivo(evento: React.ChangeEvent<HTMLInputElement>) {
+    const arquivo = evento.target.files?.[0];
+    if (!arquivo) return;
+
+    setErro(null);
+    setEnviandoArquivo(true);
+    setNomeArquivo(arquivo.name);
+
+    try {
+      const resultado = await uploadMidiaCampanha(arquivo);
+      setMidiaUrl(resultado.url);
+    } catch (e) {
+      setErro((e as Error).message);
+      setNomeArquivo(null);
+    } finally {
+      setEnviandoArquivo(false);
+    }
   }
 
   async function salvar() {
     setErro(null);
     try {
-      await criar.mutateAsync({ nome, templateMensagemId: templateId, filtroPublico: filtro });
+      await criar.mutateAsync({
+        nome,
+        templateMensagemId: templateId,
+        filtroPublico: filtro,
+        midiaUrl: midiaUrl ?? undefined,
+      });
       limparEfechar();
     } catch (e) {
       setErro((e as Error).message);
     }
   }
 
-  const formularioValido = nome.trim() && templateId && (preview?.total ?? 0) > 0;
+  const precisaDeMidia = !!templateSelecionado?.midiaTipo;
+  const midiaOk = !precisaDeMidia || !!midiaUrl;
+  const formularioValido = nome.trim() && templateId && (preview?.total ?? 0) > 0 && midiaOk && !enviandoArquivo;
 
   return (
     <Dialog open={aberto} onOpenChange={(v) => !v && limparEfechar()}>
@@ -97,7 +137,7 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
                 Meta" preenchido (aba Templates) — os dois são necessários pro envio de verdade.
               </p>
             ) : (
-              <Select value={templateId} onValueChange={setTemplateId}>
+              <Select value={templateId} onValueChange={mudarTemplate}>
                 <SelectTrigger>
                   <SelectValue placeholder="Selecione o template" />
                 </SelectTrigger>
@@ -105,12 +145,50 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
                   {templatesAprovados.map((t) => (
                     <SelectItem key={t.id} value={t.id}>
                       {t.nome}
+                      {t.midiaTipo ? ` (${ROTULO_MIDIA_TIPO[t.midiaTipo]})` : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             )}
           </div>
+
+          {precisaDeMidia && templateSelecionado?.midiaTipo && (
+            <div className="space-y-1.5">
+              <Label>Anexar {ROTULO_MIDIA_TIPO[templateSelecionado.midiaTipo].toLowerCase()}</Label>
+              <label
+                className="flex cursor-pointer flex-col items-center gap-2 rounded-lg border border-dashed border-border bg-muted/30 px-4 py-6 text-sm text-muted-foreground transition-colors hover:bg-muted/60"
+              >
+                {enviandoArquivo ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : midiaUrl ? (
+                  <CheckCircle2 className="h-5 w-5 text-online" />
+                ) : (
+                  <Upload className="h-5 w-5" />
+                )}
+                <span className="font-medium text-foreground">
+                  {enviandoArquivo ? 'Enviando...' : nomeArquivo ?? 'Clique para escolher o arquivo'}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  accept={
+                    templateSelecionado.midiaTipo === 'image'
+                      ? 'image/*'
+                      : templateSelecionado.midiaTipo === 'video'
+                        ? 'video/*'
+                        : '.pdf'
+                  }
+                  onChange={aoEscolherArquivo}
+                />
+              </label>
+              <p className="text-xs text-muted-foreground">
+                Esse template foi aprovado na Meta com cabeçalho de{' '}
+                {ROTULO_MIDIA_TIPO[templateSelecionado.midiaTipo].toLowerCase()} — precisa anexar
+                o arquivo aqui antes de criar a campanha.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2 rounded-lg border border-border p-3">
             <Label className="text-xs uppercase tracking-wide text-muted-foreground">
