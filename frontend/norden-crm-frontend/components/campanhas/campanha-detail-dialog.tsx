@@ -69,6 +69,25 @@ export function CampanhaDetailDialog({
             </DialogHeader>
 
             <div className="space-y-3">
+              {campanha.midiaUrl && campanha.templateMensagem.midiaTipo === 'image' && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={campanha.midiaUrl}
+                  alt="Mídia anexada à campanha"
+                  className="max-h-40 w-full rounded-md border border-border object-cover"
+                />
+              )}
+              {campanha.midiaUrl && campanha.templateMensagem.midiaTipo !== 'image' && (
+                
+                  href={campanha.midiaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate rounded-md border border-border px-3 py-2 text-xs text-accent underline"
+                >
+                  Ver arquivo anexado
+                </a>
+              )}
+
               <div className="rounded-md border border-border p-3 text-sm text-foreground">
                 {campanha.templateMensagem.conteudo}
               </div>
