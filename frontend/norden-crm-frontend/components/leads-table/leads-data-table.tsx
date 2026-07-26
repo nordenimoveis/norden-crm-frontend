@@ -45,7 +45,7 @@ export function LeadsDataTable() {
   }
 
   function abrirChat(leadId: string) {
-    router.push(`/kanban?leadId=${leadId}`);
+    router.push(`/mensagens?leadId=${leadId}`);
   }
 
   async function exportar() {
@@ -59,6 +59,7 @@ export function LeadsDataTable() {
 
   return (
     <div className="flex h-full flex-col gap-4">
+      {/* Barra de ações — importar/exportar só para gestor/admin */}
       <div className="flex items-center justify-between gap-2">
         <Button variant="accent" size="sm" onClick={() => setNovoLeadAberto(true)}>
           <UserPlus className="h-4 w-4" />
@@ -140,6 +141,7 @@ export function LeadsDataTable() {
             </TableBody>
           </Table>
 
+          {/* Paginação */}
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>
               {data?.total ?? 0} lead{(data?.total ?? 0) !== 1 ? 's' : ''} encontrado

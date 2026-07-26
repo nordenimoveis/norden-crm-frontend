@@ -28,6 +28,7 @@ export function NovoLeadDialog({ aberto, onFechar }: { aberto: boolean; onFechar
   const [corretorId, setCorretorId] = useState<string>('');
   const [erro, setErro] = useState<string | null>(null);
 
+  // Só busca a lista de corretores se for gestor/admin (corretor não escolhe, vai pra si mesmo)
   const { data: corretores } = useCorretores(ehGestorOuAdmin);
   const criar = useCriarLeadManual();
 
@@ -47,6 +48,8 @@ export function NovoLeadDialog({ aberto, onFechar }: { aberto: boolean; onFechar
         nome,
         telefone,
         email: email.trim() || undefined,
+        // Corretor cadastra e o lead já fica com ele; gestor/admin escolhe
+        // (ou deixa em branco pra cair no round-robin normal).
         corretorId: ehGestorOuAdmin ? corretorId || undefined : usuario?.id,
       });
       limparEfechar();

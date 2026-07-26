@@ -34,12 +34,16 @@ export function useAtualizarStatusLead(filtros: FiltrosLeads) {
     },
 
     onError: (_err, _variaveis, contexto) => {
+      // Falhou — volta o card pro lugar de origem
       if (contexto?.dadosAnteriores) {
         queryClient.setQueryData(queryKey, contexto.dadosAnteriores);
       }
     },
 
     onSettled: () => {
+      // Ressincroniza com o servidor ao final (sucesso ou erro), garantindo
+      // que qualquer efeito colateral do backend (ex: limpar atendimentoHumano)
+      // seja refletido, sem depender só do optimistic update.
       queryClient.invalidateQueries({ queryKey });
     },
   });

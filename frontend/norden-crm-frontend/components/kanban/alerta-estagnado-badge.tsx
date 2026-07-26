@@ -49,4 +49,3 @@ export function AlertaEstagnadoBadge({
     </span>
   );
 }
-// v2

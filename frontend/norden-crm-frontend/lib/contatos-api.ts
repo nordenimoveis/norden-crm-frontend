@@ -10,6 +10,10 @@ export type ResultadoImportacao = {
   exemplosInvalidos: { linha: number; motivo: string }[];
 };
 
+/**
+ * Upload da planilha via FormData (não JSON) — por isso não usa o apiFetch
+ * padrão, que assume corpo JSON. O token é anexado manualmente.
+ */
 export async function importarContatos(arquivo: File): Promise<ResultadoImportacao> {
   const token = lerCookieToken();
   const formData = new FormData();
@@ -29,6 +33,10 @@ export async function importarContatos(arquivo: File): Promise<ResultadoImportac
   return response.json();
 }
 
+/**
+ * Download da planilha de contatos. Como é um arquivo binário (não JSON),
+ * baixa o blob e dispara o download no navegador manualmente.
+ */
 export async function exportarContatos(origem?: string): Promise<void> {
   const token = lerCookieToken();
   const params = origem ? `?origem=${origem}` : '';

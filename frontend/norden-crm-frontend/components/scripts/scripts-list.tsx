@@ -16,7 +16,7 @@ export function ScriptsList({ onEditar }: { onEditar: (item: QuickReply) => void
 
   function podeEditar(item: QuickReply) {
     if (!usuario) return false;
-    if (usuario.papel !== 'corretor') return true;
+    if (usuario.papel !== 'corretor') return true; // gestor/admin edita qualquer um
     return item.tipo === 'pessoal' && item.usuarioId === usuario.id;
   }
 

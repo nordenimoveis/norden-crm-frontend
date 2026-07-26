@@ -23,6 +23,10 @@ const COLUNAS: ColunaConfig[] = [
   { status: 'visita_agendada', titulo: 'Visita Agendada' },
   { status: 'proposta', titulo: 'Proposta' },
   { status: 'negocio_fechado', titulo: 'Negócio Fechado' },
+  // Standby/Nutrição: cadência terminou sem resposta, mas no alto padrão isso
+  // NÃO é "Perdido" — é um ciclo de decisão mais longo. Fica antes de Perdido
+  // de propósito, com tom neutro/acinzentado para não competir visualmente
+  // com as colunas "quentes" (Em Atendimento/Proposta).
   { status: 'frio_standby', titulo: 'Standby / Nutrição', tom: 'neutro' },
   { status: 'perdido', titulo: 'Perdido' },
 ];
@@ -41,11 +45,15 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
   const { mutate: moverLead } = useAtualizarStatusLead(filtros);
   usePusherKanban();
 
+  // Busca leve, reaproveitada do chat — usada só pra achar o script marcado
+  // como "pedido de avaliação Google", se algum existir.
   const { data: quickReplies } = useQuickReplies('', true);
   const quickReplyAvaliacao = quickReplies?.find((qr) => qr.paraAvaliacaoGoogle) ?? null;
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
+      // Distância mínima antes de considerar "arrastar" — abaixo disso, o
+      // gesto é tratado como clique normal (abre o lead, não move o card).
       activationConstraint: { distance: 8 },
     })
   );
@@ -74,10 +82,12 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
     const novoStatus = over.id as LeadStatus;
     const statusAtual = (active.data.current?.status as LeadStatus) ?? undefined;
 
-    if (novoStatus === statusAtual) return;
+    if (novoStatus === statusAtual) return; // soltou na mesma coluna, não faz nada
 
     moverLead({ leadId, novoStatus });
 
+    // Sugestão de avaliação Google — só dispara se realmente existir um
+    // script marcado para isso (senão o dialog nem chega a aparecer).
     if (novoStatus === 'negocio_fechado' && quickReplyAvaliacao) {
       const lead = data?.items.find((l) => l.id === leadId);
       setLeadFechado({ id: leadId, nome: lead?.nome ?? null });
@@ -132,6 +142,12 @@ export function KanbanBoard({ onAbrirLead }: { onAbrirLead: (leadId: string) => 
             ))}
           </div>
 
+          {/*
+            DragOverlay renderiza o card arrastado FORA do fluxo normal do
+            DOM (num portal), então ele flutua por cima de tudo — inclusive
+            das colunas com scroll, que antes "cortavam" o card no meio do
+            arrasto por causa do overflow-y-auto delas.
+          */}
           <DragOverlay>
             {leadArrastando ? (
               <div className="rotate-2 opacity-90">

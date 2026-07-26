@@ -77,10 +77,16 @@ export function CampanhaDetailDialog({
                   className="max-h-40 w-full rounded-md border border-border object-cover"
                 />
               )}
-
-{campanha.midiaUrl && campanha.templateMensagem.midiaTipo !== 'image' && (
-  <a href={campanha.midiaUrl} target="_blank" rel="noopener noreferrer" className="block truncate rounded-md border border-border px-3 py-2 text-xs text-accent underline">Ver arquivo anexado</a>
-)}
+              {campanha.midiaUrl && campanha.templateMensagem.midiaTipo !== 'image' && (
+                <a
+                  href={campanha.midiaUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block truncate rounded-md border border-border px-3 py-2 text-xs text-accent underline"
+                >
+                  Ver arquivo anexado
+                </a>
+              )}
 
               <div className="rounded-md border border-border p-3 text-sm text-foreground">
                 {campanha.templateMensagem.conteudo}

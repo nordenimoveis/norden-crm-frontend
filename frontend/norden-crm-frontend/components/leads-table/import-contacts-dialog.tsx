@@ -38,6 +38,7 @@ export function ImportContactsDialog({ aberto, onFechar }: { aberto: boolean; on
     try {
       const res = await importarContatos(arquivo);
       setResultado(res);
+      // Atualiza as listas de leads (tabela e board) com os novos contatos
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     } catch (e) {
       setErro((e as Error).message);
@@ -57,6 +58,7 @@ export function ImportContactsDialog({ aberto, onFechar }: { aberto: boolean; on
           </DialogDescription>
         </DialogHeader>
 
+        {/* Estado inicial: seleção de arquivo */}
         {!resultado && (
           <div className="space-y-4">
             <button
@@ -91,6 +93,7 @@ export function ImportContactsDialog({ aberto, onFechar }: { aberto: boolean; on
           </div>
         )}
 
+        {/* Estado final: resumo do resultado */}
         {resultado && (
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-sm font-medium text-online">

@@ -7,6 +7,7 @@ export function useCriarLeadManual() {
   return useMutation({
     mutationFn: (input: CriarLeadManualInput) => criarLeadManual(input),
     onSuccess: () => {
+      // Afeta tanto o board do Kanban quanto a tabela Meus Leads
       queryClient.invalidateQueries({ queryKey: ['leads'] });
     },
   });

@@ -45,6 +45,7 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
   const [midiaUrl, setMidiaUrl] = useState<string | null>(null);
   const [nomeArquivo, setNomeArquivo] = useState<string | null>(null);
 
+  // Criação de template embutida — evita ter que ir na aba Templates antes
   const [criandoTemplate, setCriandoTemplate] = useState(false);
   const [novoTplNome, setNovoTplNome] = useState('');
   const [novoTplConteudo, setNovoTplConteudo] = useState('');
@@ -103,6 +104,9 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
       setNovoTplAprovado(false);
       setNovoTplMidia('nenhum');
 
+      // Se já nasceu aprovado + com nome da Meta, já pode ser selecionado
+      // direto pra campanha; senão, o usuário precisa aprovar depois na Meta
+      // e marcar por lá antes de conseguir usá-lo numa campanha.
       if (novoTemplate.aprovadoMeta && novoTemplate.metaTemplateName) {
         setTemplateId(novoTemplate.id);
       }
@@ -133,6 +137,11 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
   async function salvar() {
     setErro(null);
     try {
+      // Criar + marcar pronta num clique só — a revisão já aconteceu aqui
+      // nesta mesma tela, não faz sentido pedir outro clique de confirmação
+      // intermediário. O único clique que continua separado é "Iniciar
+      // envio" (na lista de campanhas), porque esse sim dispara mensagens
+      // de verdade — vale continuar sendo um passo consciente à parte.
       const campanha = await criar.mutateAsync({
         nome,
         templateMensagemId: templateId,
@@ -174,6 +183,7 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
             />
           </div>
 
+          {/* Template — selecionar ou criar embutido */}
           <div className="space-y-1.5 rounded-lg border border-border p-3">
             <div className="flex items-center justify-between">
               <Label>Template aprovado</Label>
@@ -344,6 +354,7 @@ export function CampanhaFormDialog({ aberto, onFechar }: { aberto: boolean; onFe
             </div>
           </div>
 
+          {/* Revisão final — resumo de tudo antes de salvar */}
           {formularioValido && templateSelecionado && (
             <div className="rounded-lg border border-accent/30 bg-accent/5 p-3">
               <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-accent">

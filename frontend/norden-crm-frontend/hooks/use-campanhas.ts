@@ -15,6 +15,8 @@ export function useCampanhas() {
   return useQuery({
     queryKey: ['campanhas-disparo'],
     queryFn: listarCampanhas,
+    // Enquanto alguma campanha estiver "enviando", atualiza sozinho a cada 5s
+    // pra refletir o progresso sem o usuário precisar recarregar a página.
     refetchInterval: (query) => {
       const dados = query.state.data;
       return dados?.some((c) => c.status === 'enviando') ? 5000 : false;
@@ -31,6 +33,7 @@ export function useCampanhaDetalhe(id: string | null) {
   });
 }
 
+/** Contagem ao vivo do público — alimenta o "X destinatários" no editor, enquanto o usuário ajusta os filtros. */
 export function usePreviewPublico(filtro: FiltroPublico, habilitado: boolean) {
   return useQuery({
     queryKey: ['campanhas-disparo', 'preview-publico', filtro],

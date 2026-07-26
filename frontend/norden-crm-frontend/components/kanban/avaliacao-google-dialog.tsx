@@ -39,7 +39,7 @@ export function AvaliacaoGoogleDialog({
 
   function abrirChatComMensagem() {
     definirMensagemSugerida({ leadId: leadId!, texto: textoSubstituido });
-    router.push(`/kanban?leadId=${leadId}`);
+    router.push(`/mensagens?leadId=${leadId}`);
     onFechar();
   }
 

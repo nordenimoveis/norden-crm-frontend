@@ -42,6 +42,7 @@ export function ScriptFormDialog({
   const emAndamento = criar.isPending || atualizar.isPending;
   const estaEditando = !!quickReplyEditando;
 
+  // Repopula o formulário sempre que o dialog abre (criação limpa, edição pré-preenchida)
   useEffect(() => {
     if (!aberto) return;
     setTitulo(quickReplyEditando?.titulo ?? '');
@@ -103,6 +104,7 @@ export function ScriptFormDialog({
             </p>
           </div>
 
+          {/* Tipo só é escolhido na criação — depois de criado, é imutável (mesma regra do backend) */}
           {!estaEditando && (
             <div className="space-y-1.5">
               <Label>Visibilidade</Label>
@@ -125,6 +127,11 @@ export function ScriptFormDialog({
             </div>
           )}
 
+          {/*
+            Só faz sentido marcar isso em scripts GLOBAIS — a sugestão de
+            avaliação aparece pra qualquer corretor que fechar um negócio,
+            então precisa ser um script que todo mundo enxerga.
+          */}
           {estaEditando && podeGlobal && quickReplyEditando?.tipo === 'global' && (
             <div className="flex items-center justify-between rounded-md border border-border px-3 py-2">
               <div>

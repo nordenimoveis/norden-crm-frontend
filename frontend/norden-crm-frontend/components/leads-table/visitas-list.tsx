@@ -88,32 +88,32 @@ export function VisitasList() {
         itens={grupos.atrasados}
         tom="urgente"
         ehGestorOuAdmin={ehGestorOuAdmin}
-        onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
+        onAbrir={(id) => router.push(`/mensagens?leadId=${id}`)}
       />
       <GrupoAgendamentos
         titulo="Hoje"
         itens={grupos.hoje}
         tom="hoje"
         ehGestorOuAdmin={ehGestorOuAdmin}
-        onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
+        onAbrir={(id) => router.push(`/mensagens?leadId=${id}`)}
       />
       <GrupoAgendamentos
         titulo="Amanhã"
         itens={grupos.amanha}
         ehGestorOuAdmin={ehGestorOuAdmin}
-        onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
+        onAbrir={(id) => router.push(`/mensagens?leadId=${id}`)}
       />
       <GrupoAgendamentos
         titulo="Esta semana"
         itens={grupos.semana}
         ehGestorOuAdmin={ehGestorOuAdmin}
-        onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
+        onAbrir={(id) => router.push(`/mensagens?leadId=${id}`)}
       />
       <GrupoAgendamentos
         titulo="Mais adiante"
         itens={grupos.depois}
         ehGestorOuAdmin={ehGestorOuAdmin}
-        onAbrir={(id) => router.push(`/kanban?leadId=${id}`)}
+        onAbrir={(id) => router.push(`/mensagens?leadId=${id}`)}
       />
     </div>
   );

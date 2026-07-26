@@ -8,6 +8,11 @@ import { CampanhasList } from '@/components/campanhas/campanhas-list';
 import { TemplatesList } from '@/components/campanhas/templates-list';
 import { useAuthStore } from '@/store/auth-store';
 
+/**
+ * RBAC: gestor/admin apenas — mesma régua do backend (disparo em massa e
+ * templates são superfícies sensíveis, não é algo que todo corretor deveria
+ * poder criar sozinho).
+ */
 export default function CampanhasPage() {
   const usuario = useAuthStore((state) => state.usuario);
   const router = useRouter();

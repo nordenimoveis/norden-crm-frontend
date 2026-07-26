@@ -47,6 +47,10 @@ export async function deletarCampanha(id: string): Promise<void> {
 
 export type ResultadoUploadMidia = { url: string; tipo: MidiaTipo };
 
+/**
+ * Upload via FormData — não usa o apiFetch padrão (que assume JSON), mesmo
+ * padrão já usado na importação de planilhas.
+ */
 export async function uploadMidiaCampanha(arquivo: File): Promise<ResultadoUploadMidia> {
   const token = lerCookieToken();
   const formData = new FormData();

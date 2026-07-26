@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   KanbanSquare,
+  MessageCircle,
   Users,
   MessageSquareText,
   Megaphone,
@@ -18,11 +19,14 @@ import { useAuthStore } from '@/store/auth-store';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const itensNavegacao = [
+  { href: '/mensagens', label: 'Mensagens', icone: MessageCircle, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/kanban', label: 'Kanban', icone: KanbanSquare, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/visitas', label: 'Agenda', icone: CalendarClock, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false, somenteGestorOuAdmin: false },
+  // Disparo em massa é sensível — mesma régua do backend: gestor OU admin.
   { href: '/campanhas', label: 'Campanhas', icone: Megaphone, somenteAdmin: false, somenteGestorOuAdmin: true },
+  // Fase 10: estritamente admin — mesma decisão de RBAC do backend/página.
   { href: '/configuracoes', label: 'Configurações', icone: Settings, somenteAdmin: true, somenteGestorOuAdmin: false },
 ] as const;
 
@@ -44,6 +48,7 @@ export function Sidebar() {
           sidebarRecolhida ? 'w-[68px]' : 'w-64'
         )}
       >
+        {/* Wordmark */}
         <div className="flex h-16 items-center px-4">
           {sidebarRecolhida ? (
             <span className="font-display text-xl font-medium text-accent">N</span>
@@ -56,6 +61,7 @@ export function Sidebar() {
 
         <Separator />
 
+        {/* Navegação */}
         <nav className="flex-1 space-y-1 px-3 py-4">
           {itensVisiveis.map((item) => (
             <ItemNavegacao key={item.href} item={item} recolhida={sidebarRecolhida} />
@@ -64,6 +70,7 @@ export function Sidebar() {
 
         <Separator />
 
+        {/* Toggle de recolher/expandir */}
         <div className="p-3">
           <button
             onClick={alternarSidebar}

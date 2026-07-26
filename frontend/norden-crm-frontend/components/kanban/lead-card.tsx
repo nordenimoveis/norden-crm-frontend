@@ -78,6 +78,11 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
         </div>
       )}
 
+      {/*
+        Compromisso agendado (visita, reunião, ligação, WhatsApp...) —
+        independente do status do Kanban, então aparece em QUALQUER coluna
+        se o lead tiver uma data marcada.
+      */}
       {lead.dataAgendamento && (
         <div className="mt-2 flex items-center gap-1 text-xs font-medium text-accent">
           <IconeAgendamento className="h-3 w-3" />

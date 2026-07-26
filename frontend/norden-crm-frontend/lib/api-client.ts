@@ -42,6 +42,11 @@ export async function apiFetch<T = unknown>(path: string, options: ApiFetchOptio
   const { semAuth, body, headers, ...resto } = options;
 
   const headersFinais: Record<string, string> = {
+    // Content-Type só entra quando existe corpo de verdade — o Fastify
+    // rejeita (FST_ERR_CTP_EMPTY_JSON_BODY) uma requisição que declara
+    // JSON no header mas manda corpo vazio, que é exatamente o caso das
+    // ações "sem payload" tipo marcar-pronta/iniciar-envio (a informação
+    // toda já está na URL, no :id).
     ...(body !== undefined ? { 'Content-Type': 'application/json' } : {}),
     ...(headers as Record<string, string>),
   };
