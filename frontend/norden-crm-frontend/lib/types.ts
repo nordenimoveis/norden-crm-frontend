@@ -55,6 +55,9 @@ export type Lead = {
   horasParado: number | null;
   dataAgendamento: string | null;
   tipoAgendamento: TipoAgendamento | null;
+  notasInternas: string | null;
+  naoLida: boolean;
+  ultimaMensagemEm: string | null;
 };
 
 export type ListaLeadsResposta = {
