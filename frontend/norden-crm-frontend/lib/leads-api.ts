@@ -1,5 +1,5 @@
 import { apiFetch } from './api-client';
-import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario, TipoAgendamento, StatusIA } from './types';
+import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario, TipoAgendamento, StatusIA, PerfilBusca, MatchImovel } from './types';
 
 export type FiltrosLeads = {
   corretorId?: string;
@@ -86,7 +86,13 @@ export type AtualizarLeadInput = {
   email?: string;
   dataAgendamento?: string | null;
   tipoAgendamento?: TipoAgendamento | null;
+  perfilBusca?: PerfilBusca | null;
+  perfilSemantico?: string | null;
 };
+
+export async function buscarMatchImoveis(leadId: string): Promise<MatchImovel[]> {
+  return apiFetch<MatchImovel[]>(`/api/leads/${leadId}/match-imoveis`);
+}
 
 export async function atualizarLead(leadId: string, input: AtualizarLeadInput): Promise<Lead> {
   return apiFetch<Lead>(`/api/leads/${leadId}`, {

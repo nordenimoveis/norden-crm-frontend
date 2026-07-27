@@ -24,6 +24,39 @@ export type Imovel = {
   id: string;
   titulo: string;
   bairro: string | null;
+  cidade: string;
+  valor: string | null;
+  metragem: number | null;
+  quartos: number | null;
+  descricao: string | null;
+  fotoUrl: string | null;
+  referenciaExterna: string | null;
+  ativo: boolean;
+  criadoEm: string;
+};
+
+export type PerfilBusca = {
+  bairro?: string;
+  orcamentoMin?: number;
+  orcamentoMax?: number;
+  quartos?: number;
+  finalidade?: 'moradia' | 'investimento';
+};
+
+export type MatchImovel = {
+  imovel: Imovel;
+  matchScore: number;
+  motivo: string;
+};
+
+export type DadosImovelExtraidos = {
+  titulo: string;
+  bairro: string | null;
+  cidade: string | null;
+  valor: number | null;
+  metragem: number | null;
+  quartos: number | null;
+  descricao: string;
 };
 
 export type AlertaLead = 'aguardando_resposta' | 'sem_atividade' | null;
@@ -66,6 +99,9 @@ export type Lead = {
   naoLida: boolean;
   ultimaMensagemEm: string | null;
   statusIA: StatusIA;
+  score: number;
+  perfilBusca: PerfilBusca | null;
+  perfilSemantico: string | null;
 };
 
 export type OrigemDocumento = 'pdf' | 'url';
