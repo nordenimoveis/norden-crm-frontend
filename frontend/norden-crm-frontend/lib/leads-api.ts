@@ -72,7 +72,6 @@ export type AtualizarLeadInput = {
   email?: string;
   dataAgendamento?: string | null;
   tipoAgendamento?: TipoAgendamento | null;
-  notasInternas?: string | null;
 };
 
 export async function atualizarLead(leadId: string, input: AtualizarLeadInput): Promise<Lead> {
