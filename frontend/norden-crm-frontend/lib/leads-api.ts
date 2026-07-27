@@ -28,6 +28,13 @@ export async function atualizarStatusLead(id: string, status: LeadStatus): Promi
   });
 }
 
+export async function atualizarTemperaturaLead(id: string, temperatura: LeadTemperatura): Promise<Lead> {
+  return apiFetch<Lead>(`/api/leads/${id}/temperatura`, {
+    method: 'PATCH',
+    body: { temperatura },
+  });
+}
+
 export async function listarUsuarios(): Promise<Usuario[]> {
   return apiFetch<Usuario[]>('/api/usuarios');
 }

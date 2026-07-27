@@ -4,13 +4,21 @@ import { useState } from 'react';
 import { Phone, Pencil, MapPin, CalendarClock, Send, Loader2 } from 'lucide-react';
 import { useLeadDetalhado } from '@/hooks/use-lead-detalhado';
 import { useNotasInternas, useCriarNota } from '@/hooks/use-notas-internas';
+import { useAtualizarStatusGenerico, useAtualizarTemperaturaGenerico } from '@/hooks/use-atualizar-status-temperatura';
 import { useAuthStore } from '@/store/auth-store';
 import { EditLeadDialog } from '@/components/chat/edit-lead-dialog';
 import { OrigemBadge } from '@/components/kanban/origem-badge';
-import { TemperaturaBadge } from '@/components/kanban/temperatura-badge';
 import { AlertaEstagnadoBadge } from '@/components/kanban/alerta-estagnado-badge';
 import { TransferirCorretorSelect } from '@/components/leads-table/transferir-corretor-select';
-import { ROTULO_TIPO_AGENDAMENTO } from '@/lib/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { ROTULO_TIPO_AGENDAMENTO, ROTULO_STATUS, LeadStatus, LeadTemperatura } from '@/lib/types';
+
+const ROTULO_TEMPERATURA: Record<LeadTemperatura, string> = {
+  nao_avaliado: 'Não avaliado',
+  frio: 'Frio',
+  morno: 'Morno',
+  quente: 'Quente',
+};
 
 function iniciais(nome: string) {
   return nome
@@ -39,6 +47,9 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
   const { data: notas, isLoading: carregandoNotas } = useNotasInternas(leadId);
   const criarNota = useCriarNota(leadId);
   const [novaNota, setNovaNota] = useState('');
+
+  const atualizarStatus = useAtualizarStatusGenerico();
+  const atualizarTemperatura = useAtualizarTemperaturaGenerico();
 
   const [editando, setEditando] = useState(false);
 
@@ -87,8 +98,46 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
           <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
             Status
           </p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <TemperaturaBadge temperatura={lead.temperatura} />
+          <Select
+            value={lead.status}
+            onValueChange={(v) =>
+              atualizarStatus.mutate({ leadId: lead.id, status: v as LeadStatus })
+            }
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ROTULO_STATUS).map(([valor, rotulo]) => (
+                <SelectItem key={valor} value={valor}>
+                  {rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <p className="mb-2 mt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Temperatura
+          </p>
+          <Select
+            value={lead.temperatura}
+            onValueChange={(v) =>
+              atualizarTemperatura.mutate({ leadId: lead.id, temperatura: v as LeadTemperatura })
+            }
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ROTULO_TEMPERATURA).map(([valor, rotulo]) => (
+                <SelectItem key={valor} value={valor}>
+                  {rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <OrigemBadge origem={lead.origem} />
           </div>
           {lead.alerta && (
