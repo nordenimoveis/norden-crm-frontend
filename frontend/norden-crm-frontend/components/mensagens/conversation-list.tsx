@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useLeadsDoBoard } from '@/hooks/use-leads';
 import { useAuthStore } from '@/store/auth-store';
@@ -56,6 +56,19 @@ export function ConversationList({
     });
   }, [data, busca]);
 
+  // Quando a conversa ativa muda (ex: abrindo um link direto com ?leadId=,
+  // vindo da Agenda, de Campanhas, ou de "Meus Leads"), garante que ela
+  // fique visível na lista, mesmo se estiver fora da área rolada — sem
+  // isso, o destaque visual acontecia, mas a pessoa podia não enxergar
+  // onde, se a conversa estivesse mais abaixo na lista.
+  const itemAtivoRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (leadIdAtivo && itemAtivoRef.current) {
+      itemAtivoRef.current.scrollIntoView({ block: 'nearest' });
+    }
+  }, [leadIdAtivo, conversas]);
+
   return (
     <div className="flex w-[320px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex h-16 items-center justify-between border-b border-sidebar-border px-4">
@@ -87,6 +100,7 @@ export function ConversationList({
             return (
               <button
                 key={lead.id}
+                ref={ativo ? itemAtivoRef : undefined}
                 onClick={() => onSelecionar(lead.id)}
                 className={cn(
                   'flex w-full items-start gap-3 border-b border-sidebar-border/60 px-4 py-3 text-left transition-colors',
