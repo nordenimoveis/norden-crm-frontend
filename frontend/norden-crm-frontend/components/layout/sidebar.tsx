@@ -10,6 +10,7 @@ import {
   Megaphone,
   CalendarClock,
   BrainCircuit,
+  Building2,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -25,6 +26,7 @@ const itensNavegacao = [
   { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/visitas', label: 'Agenda', icone: CalendarClock, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/imoveis', label: 'Catálogo de Imóveis', icone: Building2, somenteAdmin: false, somenteGestorOuAdmin: true },
   { href: '/base-conhecimento', label: 'Base de Conhecimento (IA)', icone: BrainCircuit, somenteAdmin: false, somenteGestorOuAdmin: true },
   // Disparo em massa é sensível — mesma régua do backend: gestor OU admin.
   { href: '/campanhas', label: 'Campanhas', icone: Megaphone, somenteAdmin: false, somenteGestorOuAdmin: true },

@@ -10,6 +10,8 @@ export function useAtualizarLead(leadId: string) {
       // Afeta tanto a ficha aberta no chat quanto o card no board/tabela
       queryClient.invalidateQueries({ queryKey: ['lead', leadId] });
       queryClient.invalidateQueries({ queryKey: ['leads'] });
+      // Se o perfil de busca mudou, os matches de imóveis podem ter mudado também
+      queryClient.invalidateQueries({ queryKey: ['match-imoveis', leadId] });
     },
   });
 }

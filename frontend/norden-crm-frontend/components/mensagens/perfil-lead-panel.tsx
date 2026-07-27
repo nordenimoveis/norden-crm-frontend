@@ -10,6 +10,7 @@ import { EditLeadDialog } from '@/components/chat/edit-lead-dialog';
 import { OrigemBadge } from '@/components/kanban/origem-badge';
 import { AlertaEstagnadoBadge } from '@/components/kanban/alerta-estagnado-badge';
 import { TransferirCorretorSelect } from '@/components/leads-table/transferir-corretor-select';
+import { InteligenciaNorden } from './inteligencia-norden';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ROTULO_TIPO_AGENDAMENTO, ROTULO_STATUS, ROTULO_STATUS_IA, LeadStatus, LeadTemperatura, StatusIA } from '@/lib/types';
 
@@ -93,6 +94,8 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
       </div>
 
       <EditLeadDialog lead={lead} aberto={editando} onFechar={() => setEditando(false)} />
+
+      <InteligenciaNorden lead={lead} />
 
       <div className="space-y-5 p-5">
         <div>
