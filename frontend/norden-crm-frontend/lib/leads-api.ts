@@ -1,5 +1,5 @@
 import { apiFetch } from './api-client';
-import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario, TipoAgendamento } from './types';
+import { Lead, ListaLeadsResposta, LeadStatus, LeadOrigem, LeadTemperatura, Usuario, TipoAgendamento, StatusIA } from './types';
 
 export type FiltrosLeads = {
   corretorId?: string;
@@ -32,6 +32,13 @@ export async function atualizarTemperaturaLead(id: string, temperatura: LeadTemp
   return apiFetch<Lead>(`/api/leads/${id}/temperatura`, {
     method: 'PATCH',
     body: { temperatura },
+  });
+}
+
+export async function atualizarStatusIALead(id: string, statusIA: StatusIA): Promise<Lead> {
+  return apiFetch<Lead>(`/api/leads/${id}/status-ia`, {
+    method: 'PATCH',
+    body: { statusIA },
   });
 }
 

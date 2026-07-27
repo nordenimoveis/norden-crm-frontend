@@ -108,6 +108,7 @@ export type Mensagem = {
   criadoEm: string;
 };
 
+// GET /api/leads/:id retorna o lead + histórico de mensagens
 export type LeadDetalhado = Lead & {
   mensagens: Mensagem[];
 };
@@ -135,6 +136,8 @@ export type QuickReply = {
   paraAvaliacaoGoogle: boolean;
 };
 
+// --- Templates de mensagem (WhatsApp Cloud API — usados em cadência e campanhas) ---
+
 export type MidiaTipo = 'image' | 'video' | 'document';
 
 export const ROTULO_MIDIA_TIPO: Record<MidiaTipo, string> = {
@@ -152,6 +155,8 @@ export type TemplateMensagem = {
   midiaTipo: MidiaTipo | null;
   criadoEm: string;
 };
+
+// --- Campanhas de disparo em massa ---
 
 export type CampanhaDisparoStatus = 'rascunho' | 'pronta' | 'enviando' | 'concluida' | 'cancelada';
 
