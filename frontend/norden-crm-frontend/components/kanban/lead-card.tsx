@@ -68,6 +68,14 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
             {iniciais(nomeExibicao)}
           </div>
           <p className="truncate text-sm font-medium text-foreground">{nomeExibicao}</p>
+          {lead.statusIA === 'ativa' && (
+            <span
+              className="shrink-0 rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px]"
+              title="IA respondendo automaticamente, sem revisão"
+            >
+              🤖
+            </span>
+          )}
         </div>
       </div>
 

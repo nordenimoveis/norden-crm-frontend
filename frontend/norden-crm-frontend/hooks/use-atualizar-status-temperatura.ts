@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { atualizarStatusLead, atualizarTemperaturaLead } from '@/lib/leads-api';
-import { Lead, LeadDetalhado, LeadStatus, LeadTemperatura, ListaLeadsResposta } from '@/lib/types';
+import { atualizarStatusLead, atualizarTemperaturaLead, atualizarStatusIALead } from '@/lib/leads-api';
+import { Lead, LeadDetalhado, LeadStatus, LeadTemperatura, StatusIA, ListaLeadsResposta } from '@/lib/types';
 
 /**
  * Diferente do `useAtualizarStatusLead` (que só mexe no cache do board com
@@ -17,7 +17,7 @@ import { Lead, LeadDetalhado, LeadStatus, LeadTemperatura, ListaLeadsResposta } 
 function patchearLeadEmTodosOsCaches(
   queryClient: ReturnType<typeof useQueryClient>,
   leadId: string,
-  mudancas: Partial<Pick<Lead, 'status' | 'temperatura'>>
+  mudancas: Partial<Pick<Lead, 'status' | 'temperatura' | 'statusIA'>>
 ) {
   // Qualquer variação de ['leads', ...] — board com filtro de corretor,
   // lista de Mensagens, tabela de Meus Leads — tudo isso é coberto de uma
@@ -57,6 +57,18 @@ export function useAtualizarTemperaturaGenerico() {
       atualizarTemperaturaLead(leadId, temperatura),
     onSuccess: (_data, { leadId, temperatura }) => {
       patchearLeadEmTodosOsCaches(queryClient, leadId, { temperatura });
+    },
+  });
+}
+
+export function useAtualizarStatusIAGenerico() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ leadId, statusIA }: { leadId: string; statusIA: StatusIA }) =>
+      atualizarStatusIALead(leadId, statusIA),
+    onSuccess: (_data, { leadId, statusIA }) => {
+      patchearLeadEmTodosOsCaches(queryClient, leadId, { statusIA });
     },
   });
 }

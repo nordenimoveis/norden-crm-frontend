@@ -111,6 +111,14 @@ export function ConversationList({
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/20 text-xs font-medium text-accent">
                     {iniciais(nomeExibicao)}
                   </div>
+                  {lead.statusIA === 'ativa' && (
+                    <span
+                      className="absolute -bottom-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-sidebar bg-amber-500 text-[8px]"
+                      title="IA respondendo automaticamente"
+                    >
+                      🤖
+                    </span>
+                  )}
                   {lead.naoLida && (
                     <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border-2 border-sidebar bg-sky-500" />
                   )}

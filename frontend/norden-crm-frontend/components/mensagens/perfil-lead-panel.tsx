@@ -4,14 +4,14 @@ import { useState } from 'react';
 import { Phone, Pencil, MapPin, CalendarClock, Send, Loader2 } from 'lucide-react';
 import { useLeadDetalhado } from '@/hooks/use-lead-detalhado';
 import { useNotasInternas, useCriarNota } from '@/hooks/use-notas-internas';
-import { useAtualizarStatusGenerico, useAtualizarTemperaturaGenerico } from '@/hooks/use-atualizar-status-temperatura';
+import { useAtualizarStatusGenerico, useAtualizarTemperaturaGenerico, useAtualizarStatusIAGenerico } from '@/hooks/use-atualizar-status-temperatura';
 import { useAuthStore } from '@/store/auth-store';
 import { EditLeadDialog } from '@/components/chat/edit-lead-dialog';
 import { OrigemBadge } from '@/components/kanban/origem-badge';
 import { AlertaEstagnadoBadge } from '@/components/kanban/alerta-estagnado-badge';
 import { TransferirCorretorSelect } from '@/components/leads-table/transferir-corretor-select';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ROTULO_TIPO_AGENDAMENTO, ROTULO_STATUS, LeadStatus, LeadTemperatura } from '@/lib/types';
+import { ROTULO_TIPO_AGENDAMENTO, ROTULO_STATUS, ROTULO_STATUS_IA, LeadStatus, LeadTemperatura, StatusIA } from '@/lib/types';
 
 const ROTULO_TEMPERATURA: Record<LeadTemperatura, string> = {
   nao_avaliado: 'Não avaliado',
@@ -50,6 +50,7 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
 
   const atualizarStatus = useAtualizarStatusGenerico();
   const atualizarTemperatura = useAtualizarTemperaturaGenerico();
+  const atualizarStatusIA = useAtualizarStatusIAGenerico();
 
   const [editando, setEditando] = useState(false);
 
@@ -136,6 +137,32 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
               ))}
             </SelectContent>
           </Select>
+
+          <p className="mb-2 mt-3 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+            Atendimento por IA
+          </p>
+          <Select
+            value={lead.statusIA}
+            onValueChange={(v) =>
+              atualizarStatusIA.mutate({ leadId: lead.id, statusIA: v as StatusIA })
+            }
+          >
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {Object.entries(ROTULO_STATUS_IA).map(([valor, rotulo]) => (
+                <SelectItem key={valor} value={valor}>
+                  {rotulo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          {lead.statusIA === 'ativa' && (
+            <p className="mt-1.5 text-[10px] text-amber-700">
+              🤖 A IA está respondendo esse lead automaticamente, sem revisão.
+            </p>
+          )}
 
           <div className="mt-2 flex flex-wrap items-center gap-1.5">
             <OrigemBadge origem={lead.origem} />

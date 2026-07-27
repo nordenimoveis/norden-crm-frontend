@@ -9,6 +9,7 @@ import {
   MessageSquareText,
   Megaphone,
   CalendarClock,
+  BrainCircuit,
   Settings,
   PanelLeftClose,
   PanelLeftOpen,
@@ -24,6 +25,7 @@ const itensNavegacao = [
   { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/visitas', label: 'Agenda', icone: CalendarClock, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/scripts', label: 'Scripts', icone: MessageSquareText, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/base-conhecimento', label: 'Base de Conhecimento (IA)', icone: BrainCircuit, somenteAdmin: false, somenteGestorOuAdmin: true },
   // Disparo em massa é sensível — mesma régua do backend: gestor OU admin.
   { href: '/campanhas', label: 'Campanhas', icone: Megaphone, somenteAdmin: false, somenteGestorOuAdmin: true },
   // Fase 10: estritamente admin — mesma decisão de RBAC do backend/página.
