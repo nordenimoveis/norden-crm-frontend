@@ -38,6 +38,14 @@ export const ROTULO_TIPO_AGENDAMENTO: Record<TipoAgendamento, string> = {
   outro: 'Outro',
 };
 
+export type StatusIA = 'inativa' | 'ativa' | 'pausada_humano';
+
+export const ROTULO_STATUS_IA: Record<StatusIA, string> = {
+  inativa: 'Desligada (atendimento humano)',
+  ativa: 'Ativa (IA responde sozinha)',
+  pausada_humano: 'Pausada (humano assumiu)',
+};
+
 export type Lead = {
   id: string;
   nome: string | null;
@@ -57,6 +65,18 @@ export type Lead = {
   tipoAgendamento: TipoAgendamento | null;
   naoLida: boolean;
   ultimaMensagemEm: string | null;
+  statusIA: StatusIA;
+};
+
+export type OrigemDocumento = 'pdf' | 'url';
+
+export type Documento = {
+  id: string;
+  titulo: string;
+  origem: OrigemDocumento;
+  urlOrigem: string | null;
+  criadoEm: string;
+  _count: { chunks: number };
 };
 
 export type NotaInterna = {
@@ -88,7 +108,6 @@ export type Mensagem = {
   criadoEm: string;
 };
 
-// GET /api/leads/:id retorna o lead + histórico de mensagens
 export type LeadDetalhado = Lead & {
   mensagens: Mensagem[];
 };
@@ -116,8 +135,6 @@ export type QuickReply = {
   paraAvaliacaoGoogle: boolean;
 };
 
-// --- Templates de mensagem (WhatsApp Cloud API — usados em cadência e campanhas) ---
-
 export type MidiaTipo = 'image' | 'video' | 'document';
 
 export const ROTULO_MIDIA_TIPO: Record<MidiaTipo, string> = {
@@ -135,8 +152,6 @@ export type TemplateMensagem = {
   midiaTipo: MidiaTipo | null;
   criadoEm: string;
 };
-
-// --- Campanhas de disparo em massa ---
 
 export type CampanhaDisparoStatus = 'rascunho' | 'pronta' | 'enviando' | 'concluida' | 'cancelada';
 
