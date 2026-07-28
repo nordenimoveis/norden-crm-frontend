@@ -5,6 +5,7 @@ import {
   ingerirDocumentoUrl,
   deletarDocumento,
   simularPergunta,
+  MensagemHistoricoSimulador,
 } from '@/lib/ia-api';
 
 export function useDocumentos() {
@@ -40,5 +41,13 @@ export function useDeletarDocumento() {
 }
 
 export function useSimularPergunta() {
-  return useMutation({ mutationFn: (pergunta: string) => simularPergunta(pergunta) });
+  return useMutation({
+    mutationFn: ({
+      pergunta,
+      historico,
+    }: {
+      pergunta: string;
+      historico: MensagemHistoricoSimulador[];
+    }) => simularPergunta(pergunta, historico),
+  });
 }

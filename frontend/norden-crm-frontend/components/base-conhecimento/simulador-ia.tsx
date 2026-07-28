@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Send, Loader2, FileSearch, ChevronDown, ChevronUp, Bot, User } from 'lucide-react';
+import { Send, Loader2, FileSearch, ChevronDown, ChevronUp, Bot, User, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSimularPergunta } from '@/hooks/use-ia';
-import { FonteSimulador } from '@/lib/ia-api';
+import { FonteSimulador, MensagemHistoricoSimulador } from '@/lib/ia-api';
 import { cn } from '@/lib/utils';
 
 type MensagemSimulador = {
@@ -12,6 +12,7 @@ type MensagemSimulador = {
   tipo: 'pergunta' | 'resposta';
   texto: string;
   fontes?: FonteSimulador[];
+  perguntaReescrita?: string | null;
 };
 
 export function SimuladorIA() {
@@ -28,11 +29,19 @@ export function SimuladorIA() {
     const texto = pergunta.trim();
     if (!texto || simular.isPending) return;
 
+    // Histórico é tudo que já aconteceu ANTES dessa pergunta nova — é isso
+    // que corrige a "amnésia de contexto" (ex: "o que o condomínio
+    // oferece?" depois de já ter falado de um imóvel específico).
+    const historico: MensagemHistoricoSimulador[] = mensagens.map((m) => ({
+      autor: m.tipo === 'pergunta' ? 'lead' : 'equipe',
+      texto: m.texto,
+    }));
+
     setPergunta('');
     setMensagens((atual) => [...atual, { id: crypto.randomUUID(), tipo: 'pergunta', texto }]);
 
     try {
-      const resultado = await simular.mutateAsync(texto);
+      const resultado = await simular.mutateAsync({ pergunta: texto, historico });
       setMensagens((atual) => [
         ...atual,
         {
@@ -40,6 +49,7 @@ export function SimuladorIA() {
           tipo: 'resposta',
           texto: resultado.resposta,
           fontes: resultado.fontes,
+          perguntaReescrita: resultado.perguntaReescrita,
         },
       ]);
     } catch (e) {
@@ -60,14 +70,16 @@ export function SimuladorIA() {
         <p className="text-sm font-medium text-foreground">Simulador de IA</p>
         <p className="text-xs text-muted-foreground">
           Teste perguntas aqui antes de ativar a IA em leads reais — nada disso é enviado pro
-          WhatsApp.
+          WhatsApp. O histórico da conversa é levado em conta a cada pergunta nova.
         </p>
       </div>
 
       <div className="flex-1 space-y-3 overflow-y-auto p-4">
         {mensagens.length === 0 && (
           <p className="pt-8 text-center text-xs text-muted-foreground">
-            Digite uma pergunta abaixo pra ver como a IA responderia.
+            Digite uma pergunta abaixo pra ver como a IA responderia. Experimente fazer uma
+            pergunta de acompanhamento (ex: pergunte sobre um imóvel, depois pergunte "e o
+            condomínio, o que oferece?") pra testar se ela mantém o contexto certo.
           </p>
         )}
 
@@ -142,6 +154,19 @@ function MensagemBolha({ mensagem }: { mensagem: MensagemSimulador }) {
           <div className="rounded-lg rounded-tl-sm border border-border bg-background px-3 py-2 text-sm text-foreground">
             {mensagem.texto}
           </div>
+
+          {/*
+            Transparência: se a pergunta foi reescrita internamente pra
+            busca (ex: "o que ele oferece?" virou "o que o Plenty Sea
+            oferece?"), mostra isso — ajuda a validar se a reescrita de
+            contexto está funcionando direito.
+          */}
+          {mensagem.perguntaReescrita && (
+            <p className="flex items-start gap-1 text-[10px] italic text-sky-700">
+              <Wand2 className="mt-0.5 h-2.5 w-2.5 shrink-0" />
+              Buscou por: "{mensagem.perguntaReescrita}"
+            </p>
+          )}
 
           {mensagem.fontes && mensagem.fontes.length > 0 && (
             <div>

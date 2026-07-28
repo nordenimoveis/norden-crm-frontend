@@ -1,6 +1,6 @@
 import { apiFetch } from './api-client';
 import { lerCookieToken } from './auth-cookie';
-import { Documento } from './types';
+import { Documento, DadosImovelExtraidos } from './types';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -46,14 +46,23 @@ export type FonteSimulador = {
   similaridade: number;
 };
 
+export type MensagemHistoricoSimulador = {
+  autor: 'lead' | 'equipe';
+  texto: string;
+};
+
 export type RespostaSimulador = {
   resposta: string;
+  perguntaReescrita: string | null;
   fontes: FonteSimulador[];
 };
 
-export async function simularPergunta(pergunta: string): Promise<RespostaSimulador> {
+export async function simularPergunta(
+  pergunta: string,
+  historico: MensagemHistoricoSimulador[]
+): Promise<RespostaSimulador> {
   return apiFetch<RespostaSimulador>('/api/ia/simular', {
     method: 'POST',
-    body: { pergunta },
+    body: { pergunta, historico },
   });
 }
