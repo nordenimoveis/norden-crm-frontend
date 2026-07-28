@@ -1,9 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, MapPin, BedDouble, Ruler, RefreshCw, CheckCircle2 } from 'lucide-react';
+import { Plus, Pencil, MapPin, BedDouble, Ruler, RefreshCw, Users, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useImoveis, useSincronizarImobzi } from '@/hooks/use-imoveis';
+import { useImoveis } from '@/hooks/use-imoveis';
+import { useSincronizarImoveisImobzi, useSincronizarLeadsImobzi } from '@/hooks/use-imobzi-integracao';
 import { ImovelFormDialog } from './imovel-form-dialog';
 import { Imovel } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -18,7 +19,8 @@ export function ImoveisList() {
   const [dialogAberto, setDialogAberto] = useState(false);
   const [imovelEditando, setImovelEditando] = useState<Imovel | null>(null);
 
-  const sincronizar = useSincronizarImobzi();
+  const sincronizarImoveis = useSincronizarImoveisImobzi();
+  const sincronizarLeads = useSincronizarLeadsImobzi();
   const [resumoSync, setResumoSync] = useState<string | null>(null);
   const [erroSync, setErroSync] = useState<string | null>(null);
 
@@ -32,13 +34,26 @@ export function ImoveisList() {
     setDialogAberto(true);
   }
 
-  async function sincronizarComImobzi() {
+  async function sincronizarImoveisComImobzi() {
     setResumoSync(null);
     setErroSync(null);
     try {
-      const resultado = await sincronizar.mutateAsync();
+      const resultado = await sincronizarImoveis.mutateAsync();
       setResumoSync(
-        `${resultado.atualizados} imóveis atualizados, ${resultado.novos} novos cadastrados (de ${resultado.total} no total).`
+        `Imóveis: ${resultado.atualizados} atualizados, ${resultado.novos} novos (de ${resultado.total} no total).`
+      );
+    } catch (e) {
+      setErroSync((e as Error).message);
+    }
+  }
+
+  async function sincronizarLeadsComImobzi() {
+    setResumoSync(null);
+    setErroSync(null);
+    try {
+      const resultado = await sincronizarLeads.mutateAsync();
+      setResumoSync(
+        `Leads: ${resultado.atualizados} atualizados, ${resultado.novos} novos (de ${resultado.total} no total).`
       );
     } catch (e) {
       setErroSync((e as Error).message);
@@ -56,11 +71,20 @@ export function ImoveisList() {
           <Button
             variant="outline"
             size="sm"
-            onClick={sincronizarComImobzi}
-            disabled={sincronizar.isPending}
+            onClick={sincronizarLeadsComImobzi}
+            disabled={sincronizarLeads.isPending}
           >
-            <RefreshCw className={cn('h-4 w-4', sincronizar.isPending && 'animate-spin')} />
-            {sincronizar.isPending ? 'Sincronizando...' : 'Sincronizar com Imobzi'}
+            <Users className={cn('h-4 w-4', sincronizarLeads.isPending && 'animate-pulse')} />
+            {sincronizarLeads.isPending ? 'Sincronizando...' : 'Sincronizar Leads'}
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={sincronizarImoveisComImobzi}
+            disabled={sincronizarImoveis.isPending}
+          >
+            <RefreshCw className={cn('h-4 w-4', sincronizarImoveis.isPending && 'animate-spin')} />
+            {sincronizarImoveis.isPending ? 'Sincronizando...' : 'Sincronizar Imóveis'}
           </Button>
           <Button variant="accent" size="sm" onClick={abrirCriacao}>
             <Plus className="h-4 w-4" />
