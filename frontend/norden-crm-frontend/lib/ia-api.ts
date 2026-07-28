@@ -39,3 +39,21 @@ export async function ingerirDocumentoUrl(titulo: string, url: string): Promise<
 export async function deletarDocumento(id: string): Promise<void> {
   return apiFetch<void>(`/api/ia/documentos/${id}`, { method: 'DELETE' });
 }
+
+export type FonteSimulador = {
+  conteudo: string;
+  tituloDocumento: string;
+  similaridade: number;
+};
+
+export type RespostaSimulador = {
+  resposta: string;
+  fontes: FonteSimulador[];
+};
+
+export async function simularPergunta(pergunta: string): Promise<RespostaSimulador> {
+  return apiFetch<RespostaSimulador>('/api/ia/simular', {
+    method: 'POST',
+    body: { pergunta },
+  });
+}

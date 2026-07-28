@@ -4,6 +4,7 @@ import {
   uploadDocumentoPdf,
   ingerirDocumentoUrl,
   deletarDocumento,
+  simularPergunta,
 } from '@/lib/ia-api';
 
 export function useDocumentos() {
@@ -36,4 +37,8 @@ export function useDeletarDocumento() {
     mutationFn: (id: string) => deletarDocumento(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['documentos-ia'] }),
   });
+}
+
+export function useSimularPergunta() {
+  return useMutation({ mutationFn: (pergunta: string) => simularPergunta(pergunta) });
 }
