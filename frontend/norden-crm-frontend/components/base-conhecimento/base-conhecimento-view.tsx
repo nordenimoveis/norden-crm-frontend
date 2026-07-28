@@ -19,6 +19,7 @@ import {
   useIngerirDocumentoUrl,
   useDeletarDocumento,
 } from '@/hooks/use-ia';
+import { SimuladorIA } from './simulador-ia';
 
 export function BaseConhecimentoView() {
   const { data: documentos, isLoading } = useDocumentos();
@@ -64,7 +65,8 @@ export function BaseConhecimentoView() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="grid h-full grid-cols-1 gap-4 lg:grid-cols-[1fr_400px]">
+      <div className="space-y-4 overflow-y-auto pr-1">
       <div className="flex items-center justify-between">
         <p className="text-sm text-muted-foreground">
           Documentos e páginas que a IA usa como base pra responder os leads automaticamente —
@@ -166,6 +168,11 @@ export function BaseConhecimentoView() {
           ))}
         </div>
       )}
+      </div>
+
+      <div className="hidden h-full lg:block">
+        <SimuladorIA />
+      </div>
 
       <Dialog open={dialogUrlAberto} onOpenChange={setDialogUrlAberto}>
         <DialogContent>
