@@ -59,3 +59,9 @@ export async function extrairImovelDeUrl(url: string): Promise<DadosImovelExtrai
     body: { url },
   });
 }
+
+export type ResultadoSincronizacao = { novos: number; atualizados: number; total: number };
+
+export async function sincronizarImobzi(): Promise<ResultadoSincronizacao> {
+  return apiFetch<ResultadoSincronizacao>('/api/imoveis/sincronizar-imobzi', { method: 'POST' });
+}

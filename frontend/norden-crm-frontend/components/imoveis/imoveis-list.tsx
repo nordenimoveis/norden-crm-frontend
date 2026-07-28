@@ -1,9 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, MapPin, BedDouble, Ruler } from 'lucide-react';
+import { Plus, Pencil, MapPin, BedDouble, Ruler, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useImoveis } from '@/hooks/use-imoveis';
+import { useImoveis, useSincronizarImobzi } from '@/hooks/use-imoveis';
 import { ImovelFormDialog } from './imovel-form-dialog';
 import { Imovel } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -18,6 +18,10 @@ export function ImoveisList() {
   const [dialogAberto, setDialogAberto] = useState(false);
   const [imovelEditando, setImovelEditando] = useState<Imovel | null>(null);
 
+  const sincronizar = useSincronizarImobzi();
+  const [resumoSync, setResumoSync] = useState<string | null>(null);
+  const [erroSync, setErroSync] = useState<string | null>(null);
+
   function abrirCriacao() {
     setImovelEditando(null);
     setDialogAberto(true);
@@ -28,18 +32,54 @@ export function ImoveisList() {
     setDialogAberto(true);
   }
 
+  async function sincronizarComImobzi() {
+    setResumoSync(null);
+    setErroSync(null);
+    try {
+      const resultado = await sincronizar.mutateAsync();
+      setResumoSync(
+        `${resultado.atualizados} imóveis atualizados, ${resultado.novos} novos cadastrados (de ${resultado.total} no total).`
+      );
+    } catch (e) {
+      setErroSync((e as Error).message);
+    }
+  }
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
           Catálogo usado pelo motor de match — cada imóvel ativo é indexado por similaridade
           semântica contra o perfil de busca dos leads.
         </p>
-        <Button variant="accent" size="sm" onClick={abrirCriacao}>
-          <Plus className="h-4 w-4" />
-          Novo imóvel
-        </Button>
+        <div className="flex shrink-0 gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={sincronizarComImobzi}
+            disabled={sincronizar.isPending}
+          >
+            <RefreshCw className={cn('h-4 w-4', sincronizar.isPending && 'animate-spin')} />
+            {sincronizar.isPending ? 'Sincronizando...' : 'Sincronizar com Imobzi'}
+          </Button>
+          <Button variant="accent" size="sm" onClick={abrirCriacao}>
+            <Plus className="h-4 w-4" />
+            Novo imóvel
+          </Button>
+        </div>
       </div>
+
+      {resumoSync && (
+        <div className="flex items-center gap-2 rounded-md bg-online/10 px-3 py-2 text-sm text-online">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
+          {resumoSync}
+        </div>
+      )}
+      {erroSync && (
+        <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700" role="alert">
+          {erroSync}
+        </p>
+      )}
 
       {isLoading ? (
         <p className="py-12 text-center text-sm text-muted-foreground">Carregando...</p>

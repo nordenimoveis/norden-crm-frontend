@@ -6,6 +6,7 @@ import {
   deletarImovel,
   extrairImovelDePdf,
   extrairImovelDeUrl,
+  sincronizarImobzi,
   ImovelInput,
 } from '@/lib/imoveis-api';
 
@@ -47,4 +48,12 @@ export function useExtrairImovelDePdf() {
 
 export function useExtrairImovelDeUrl() {
   return useMutation({ mutationFn: (url: string) => extrairImovelDeUrl(url) });
+}
+
+export function useSincronizarImobzi() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: sincronizarImobzi,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['imoveis'] }),
+  });
 }
