@@ -7,6 +7,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TeamTab } from '@/components/settings/team-tab';
 import { WhatsappTab } from '@/components/settings/whatsapp-tab';
 import { useAuthStore } from '@/store/auth-store';
+import { IntegracoesTab } from '@/components/settings/integracoes-tab';
 
 /**
  * RBAC estrito (Fase 10): diferente do padrão gestor+admin usado no resto do
@@ -41,14 +42,16 @@ export default function ConfiguracoesPage() {
       <TabsList>
         <TabsTrigger value="equipe">Gestão de Equipe</TabsTrigger>
         <TabsTrigger value="whatsapp">Motor e Segurança do WhatsApp</TabsTrigger>
+        <TabsTrigger value="integracoes">Integrações</TabsTrigger>
       </TabsList>
-
       <TabsContent value="equipe">
         <TeamTab />
       </TabsContent>
-
       <TabsContent value="whatsapp">
         <WhatsappTab />
+      </TabsContent>
+      <TabsContent value="integracoes">
+        <IntegracoesTab />
       </TabsContent>
     </Tabs>
   );
