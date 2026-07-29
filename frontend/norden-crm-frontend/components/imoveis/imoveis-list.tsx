@@ -1,10 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Pencil, MapPin, BedDouble, Ruler, RefreshCw, Users, CheckCircle2 } from 'lucide-react';
+import { Plus, Pencil, MapPin, BedDouble, Ruler, RefreshCw, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useImoveis } from '@/hooks/use-imoveis';
-import { useSincronizarImoveisImobzi, useSincronizarLeadsImobzi } from '@/hooks/use-imobzi-integracao';
+import { useSincronizarImoveisImobzi } from '@/hooks/use-imobzi-integracao';
 import { ImovelFormDialog } from './imovel-form-dialog';
 import { Imovel } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,6 @@ export function ImoveisList() {
   const [imovelEditando, setImovelEditando] = useState<Imovel | null>(null);
 
   const sincronizarImoveis = useSincronizarImoveisImobzi();
-  const sincronizarLeads = useSincronizarLeadsImobzi();
   const [resumoSync, setResumoSync] = useState<string | null>(null);
   const [erroSync, setErroSync] = useState<string | null>(null);
 
@@ -47,19 +46,6 @@ export function ImoveisList() {
     }
   }
 
-  async function sincronizarLeadsComImobzi() {
-    setResumoSync(null);
-    setErroSync(null);
-    try {
-      const resultado = await sincronizarLeads.mutateAsync();
-      setResumoSync(
-        `Leads: ${resultado.atualizados} atualizados, ${resultado.novos} novos (de ${resultado.total} no total).`
-      );
-    } catch (e) {
-      setErroSync((e as Error).message);
-    }
-  }
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
@@ -68,15 +54,6 @@ export function ImoveisList() {
           semântica contra o perfil de busca dos leads.
         </p>
         <div className="flex shrink-0 gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={sincronizarLeadsComImobzi}
-            disabled={sincronizarLeads.isPending}
-          >
-            <Users className={cn('h-4 w-4', sincronizarLeads.isPending && 'animate-pulse')} />
-            {sincronizarLeads.isPending ? 'Sincronizando...' : 'Sincronizar Leads'}
-          </Button>
           <Button
             variant="outline"
             size="sm"
