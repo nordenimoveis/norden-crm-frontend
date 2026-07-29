@@ -1,14 +1,12 @@
 'use client';
-
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldOff } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { TeamTab } from '@/components/settings/team-tab';
 import { WhatsappTab } from '@/components/settings/whatsapp-tab';
-import { useAuthStore } from '@/store/auth-store';
 import { IntegracoesTab } from '@/components/settings/integracoes-tab';
-
+import { useAuthStore } from '@/store/auth-store';
 /**
  * RBAC estrito (Fase 10): diferente do padrão gestor+admin usado no resto do
  * sistema, esta tela é EXCLUSIVA de 'admin' — decisão explícita, já que lida
@@ -19,13 +17,11 @@ import { IntegracoesTab } from '@/components/settings/integracoes-tab';
 export default function ConfiguracoesPage() {
   const usuario = useAuthStore((state) => state.usuario);
   const router = useRouter();
-
   useEffect(() => {
     if (usuario && usuario.papel !== 'admin') {
       router.replace('/kanban');
     }
   }, [usuario, router]);
-
   if (!usuario || usuario.papel !== 'admin') {
     return (
       <div className="flex h-full items-center justify-center">
@@ -36,7 +32,6 @@ export default function ConfiguracoesPage() {
       </div>
     );
   }
-
   return (
     <Tabs defaultValue="equipe">
       <TabsList>
