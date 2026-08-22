@@ -237,6 +237,7 @@ export type TemplateMensagem = {
   midiaTipo: MidiaTipo | null;
   idioma: string;
   numVariaveis: number;
+  variaveis: string[] | null;
   categoria: string | null;
   metaStatus: string | null;
   rodape: string | null;
@@ -287,6 +288,7 @@ export type CampanhaDisparo = {
 export type CampanhaDisparoDestinatario = {
   id: string;
   status: string;
+  erro: string | null;
   enviadoEm: string | null;
   lead: { id: string; nome: string | null; telefone: string };
 };

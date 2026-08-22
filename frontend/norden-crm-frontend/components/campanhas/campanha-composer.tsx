@@ -52,11 +52,15 @@ const ORIGENS: { valor: LeadOrigem; rotulo: string }[] = [
 const STATUSES: LeadStatus[] = ['novo', 'respondeu', 'em_atendimento', 'visita_agendada', 'proposta'];
 const TEMPERATURAS: LeadTemperatura[] = ['quente', 'morno', 'frio', 'nao_avaliado'];
 
-/** Substitui {{1}}, {{2}}... pelos valores preenchidos (ou mantém o marcador). */
-function montarPreview(texto: string, variaveis: string[]): string {
-  return texto.replace(/\{\{\s*(\d+)\s*\}\}/g, (_m, n) => {
-    const valor = variaveis[Number(n) - 1];
-    return valor?.trim() ? valor : `{{${n}}}`;
+/**
+ * Substitui as variáveis (nomeadas {{nome_cliente}} ou posicionais {{1}}) pelos
+ * valores preenchidos, na ordem de `nomes`. Mantém o marcador quando vazio.
+ */
+function montarPreview(texto: string, nomes: string[], valores: string[]): string {
+  return texto.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (original, id) => {
+    const i = nomes.indexOf(id);
+    const valor = i >= 0 ? valores[i] : undefined;
+    return valor?.trim() ? valor : original;
   });
 }
 
@@ -103,7 +107,8 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
 
   function selecionarTemplate(t: TemplateMensagem) {
     setTemplateId(t.id);
-    setVariaveis(Array(t.numVariaveis).fill(''));
+    const qtd = t.variaveis?.length ?? t.numVariaveis;
+    setVariaveis(Array(qtd).fill(''));
     setMidiaUrl(null);
     if (!nome) setNome(t.nome);
     setFeedback(null);
@@ -421,22 +426,28 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
                   <label className="block text-xs font-medium text-muted-foreground">
                     Variáveis do texto
                   </label>
-                  {variaveis.map((valor, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <span className="w-8 shrink-0 text-center text-xs font-medium text-muted-foreground">
-                        {`{{${i + 1}}}`}
-                      </span>
-                      <input
-                        value={valor}
-                        onFocus={() => (varFocadaRef.current = i)}
-                        onChange={(e) =>
-                          setVariaveis((a) => a.map((v, idx) => (idx === i ? e.target.value : v)))
-                        }
-                        placeholder={`Valor da variável ${i + 1}`}
-                        className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
-                      />
-                    </div>
-                  ))}
+                  {variaveis.map((valor, i) => {
+                    const nomeVar = template.variaveis?.[i] ?? `${i + 1}`;
+                    return (
+                      <div key={i} className="flex items-center gap-2">
+                        <span
+                          className="max-w-[110px] shrink-0 truncate text-right text-xs font-medium text-muted-foreground"
+                          title={`{{${nomeVar}}}`}
+                        >
+                          {`{{${nomeVar}}}`}
+                        </span>
+                        <input
+                          value={valor}
+                          onFocus={() => (varFocadaRef.current = i)}
+                          onChange={(e) =>
+                            setVariaveis((a) => a.map((v, idx) => (idx === i ? e.target.value : v)))
+                          }
+                          placeholder={`Valor de ${nomeVar}`}
+                          className="flex-1 rounded-md border border-border bg-background px-3 py-1.5 text-sm focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               )}
 
@@ -456,7 +467,7 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
                       </div>
                     )}
                     <p className="whitespace-pre-wrap text-sm text-neutral-800 dark:text-neutral-100">
-                      {montarPreview(template.conteudo, variaveis)}
+                      {montarPreview(template.conteudo, template.variaveis ?? [], variaveis)}
                     </p>
                     {template.rodape && (
                       <p className="mt-1 text-[11px] text-neutral-500 dark:text-neutral-400">{template.rodape}</p>
