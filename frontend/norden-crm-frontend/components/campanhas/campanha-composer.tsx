@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   RefreshCw,
@@ -102,6 +102,20 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
 
   const template = templatesAprovados.find((t) => t.id === templateId) ?? null;
 
+  // Mantém a quantidade de campos de variável em dia com o template — cobre o
+  // caso de re-sincronizar os templates com o compositor já aberto (os campos
+  // passam a aparecer sozinhos, sem precisar reselecionar).
+  const qtdVars = template ? (template.variaveis?.length ?? template.numVariaveis) : 0;
+  useEffect(() => {
+    setVariaveis((atual) => (atual.length === qtdVars ? atual : Array(qtdVars).fill('')));
+  }, [templateId, qtdVars]);
+
+  // Template com {{...}} no texto mas sem variáveis carregadas = registro
+  // antigo (sincronizado antes do suporte a variáveis nomeadas).
+  const variaveisNaoCarregadas = Boolean(
+    template && /\{\{/.test(template.conteudo) && qtdVars === 0
+  );
+
   const { data: preview } = usePreviewPublico(filtro, Boolean(template));
   const totalPublico = preview?.total ?? 0;
 
@@ -141,6 +155,7 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
   // Validação comum antes de disparar/agendar.
   function validar(): string | null {
     if (!template) return 'Selecione um template aprovado.';
+    if (variaveisNaoCarregadas) return 'Sincronize os templates da Meta para carregar as variáveis deste template.';
     if (!nome.trim()) return 'Dê um nome à campanha.';
     if (template.midiaTipo && !midiaUrl) return 'Esse template tem mídia — anexe o arquivo do cabeçalho.';
     if (variaveis.some((v) => !v.trim())) return 'Preencha todas as variáveis do template.';
@@ -204,6 +219,10 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
 
   async function testar() {
     if (!template) return setFeedback({ tipo: 'erro', texto: 'Selecione um template.' });
+    if (variaveisNaoCarregadas)
+      return setFeedback({ tipo: 'erro', texto: 'Sincronize os templates da Meta para carregar as variáveis.' });
+    if (variaveis.some((v) => !v.trim()))
+      return setFeedback({ tipo: 'erro', texto: 'Preencha todas as variáveis antes de testar.' });
     if (!telefoneTeste.trim()) return setFeedback({ tipo: 'erro', texto: 'Informe o número de teste.' });
     if (template.midiaTipo && !midiaUrl)
       return setFeedback({ tipo: 'erro', texto: 'Anexe a mídia antes de testar.' });
@@ -349,6 +368,17 @@ export function CampanhaComposer({ onFechar }: { onFechar: () => void }) {
             </div>
           ) : (
             <div className="mx-auto w-full max-w-md space-y-4">
+              {variaveisNaoCarregadas && (
+                <div className="flex items-start gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span>
+                    Este template tem variáveis, mas elas ainda não foram carregadas. Clique em{' '}
+                    <strong>“Sincronizar templates da Meta”</strong> (no topo) e selecione o template de
+                    novo — os campos de preenchimento vão aparecer.
+                  </span>
+                </div>
+              )}
+
               <div>
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome da campanha</label>
                 <input
