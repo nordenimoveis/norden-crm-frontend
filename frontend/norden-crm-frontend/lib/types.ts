@@ -235,16 +235,28 @@ export type TemplateMensagem = {
   metaTemplateName: string | null;
   aprovadoMeta: boolean;
   midiaTipo: MidiaTipo | null;
+  idioma: string;
+  numVariaveis: number;
+  categoria: string | null;
+  metaStatus: string | null;
+  rodape: string | null;
   criadoEm: string;
 };
 
 // --- Campanhas de disparo em massa ---
 
-export type CampanhaDisparoStatus = 'rascunho' | 'pronta' | 'enviando' | 'concluida' | 'cancelada';
+export type CampanhaDisparoStatus =
+  | 'rascunho'
+  | 'pronta'
+  | 'agendada'
+  | 'enviando'
+  | 'concluida'
+  | 'cancelada';
 
 export const ROTULO_STATUS_CAMPANHA: Record<CampanhaDisparoStatus, string> = {
   rascunho: 'Rascunho',
   pronta: 'Pronta para envio',
+  agendada: 'Agendada',
   enviando: 'Enviando',
   concluida: 'Concluída',
   cancelada: 'Cancelada',
@@ -264,6 +276,8 @@ export type CampanhaDisparo = {
   templateMensagem: TemplateMensagem;
   status: CampanhaDisparoStatus;
   midiaUrl: string | null;
+  parametros: string[] | null;
+  agendadoPara: string | null;
   criadoPor: { id: string; nome: string };
   criadoEm: string;
   atualizadoEm: string;

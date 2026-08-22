@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ShieldOff } from 'lucide-react';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CampanhasList } from '@/components/campanhas/campanhas-list';
+import { CampanhaComposer } from '@/components/campanhas/campanha-composer';
 import { TemplatesList } from '@/components/campanhas/templates-list';
 import { useAuthStore } from '@/store/auth-store';
 
@@ -16,6 +17,7 @@ import { useAuthStore } from '@/store/auth-store';
 export default function CampanhasPage() {
   const usuario = useAuthStore((state) => state.usuario);
   const router = useRouter();
+  const [compondo, setCompondo] = useState(false);
 
   const temAcesso = usuario?.papel === 'gestor' || usuario?.papel === 'admin';
 
@@ -36,6 +38,15 @@ export default function CampanhasPage() {
     );
   }
 
+  // Compositor ocupa a tela inteira (experiência "tudo em uma tela").
+  if (compondo) {
+    return (
+      <div className="h-full">
+        <CampanhaComposer onFechar={() => setCompondo(false)} />
+      </div>
+    );
+  }
+
   return (
     <Tabs defaultValue="campanhas">
       <TabsList>
@@ -44,7 +55,7 @@ export default function CampanhasPage() {
       </TabsList>
 
       <TabsContent value="campanhas">
-        <CampanhasList />
+        <CampanhasList onNova={() => setCompondo(true)} />
       </TabsContent>
 
       <TabsContent value="templates">
