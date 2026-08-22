@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation';
 import {
   KanbanSquare,
   MessageCircle,
+  MessagesSquare,
   Users,
   MessageSquareText,
   Megaphone,
@@ -22,6 +23,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 
 const itensNavegacao = [
   { href: '/mensagens', label: 'Mensagens', icone: MessageCircle, somenteAdmin: false, somenteGestorOuAdmin: false },
+  { href: '/comentarios', label: 'Comentários', icone: MessagesSquare, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/kanban', label: 'Kanban', icone: KanbanSquare, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/meus-leads', label: 'Meus Leads', icone: Users, somenteAdmin: false, somenteGestorOuAdmin: false },
   { href: '/visitas', label: 'Agenda', icone: CalendarClock, somenteAdmin: false, somenteGestorOuAdmin: false },

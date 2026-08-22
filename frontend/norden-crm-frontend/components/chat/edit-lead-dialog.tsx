@@ -45,7 +45,7 @@ export function EditLeadDialog({
   useEffect(() => {
     if (!aberto) return;
     setNome(lead.nome ?? '');
-    setTelefone(lead.telefone);
+    setTelefone(lead.telefone ?? '');
     setEmail(lead.email ?? '');
     setDataAgendamento(paraDatetimeLocal(lead.dataAgendamento));
     setTipoAgendamento(lead.tipoAgendamento ?? '');

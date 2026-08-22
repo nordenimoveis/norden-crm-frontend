@@ -12,6 +12,7 @@ import { substituirVariaveis } from '@/lib/template-variaveis';
 import { MessageBubble } from '@/components/chat/message-bubble';
 import { QuickReplyPopover } from '@/components/chat/quick-reply-popover';
 import { QuickReply } from '@/lib/types';
+import { CANAL_META, identificadorLead, nomeExibicaoLead } from '@/lib/canais';
 import { cn } from '@/lib/utils';
 
 export function ChatCentral({ leadId }: { leadId: string }) {
@@ -19,7 +20,8 @@ export function ChatCentral({ leadId }: { leadId: string }) {
   useChatRealtime(leadId);
 
   const usuario = useAuthStore((state) => state.usuario);
-  const enviarMensagem = useEnviarMensagem(leadId, lead?.telefone ?? '');
+  const canalLead = lead?.canalPrincipal ?? 'whatsapp';
+  const enviarMensagem = useEnviarMensagem(leadId, lead?.telefone ?? null, canalLead);
 
   const [texto, setTexto] = useState('');
   const [indiceAtivo, setIndiceAtivo] = useState(0);
@@ -115,8 +117,19 @@ export function ChatCentral({ leadId }: { leadId: string }) {
     <div className="flex min-w-0 flex-1 flex-col bg-background">
       <div className="flex h-16 shrink-0 items-center justify-between border-b border-border bg-card px-5">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">{lead.nome || lead.telefone}</p>
-          <p className="text-xs text-muted-foreground">{lead.telefone}</p>
+          <p className="truncate text-sm font-medium text-foreground">{nomeExibicaoLead(lead)}</p>
+          <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-medium',
+                'bg-muted',
+                CANAL_META[canalLead].cor
+              )}
+            >
+              {CANAL_META[canalLead].emoji} {CANAL_META[canalLead].rotulo}
+            </span>
+            {identificadorLead(lead)}
+          </p>
         </div>
         <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
           <MoreVertical className="h-4 w-4" />

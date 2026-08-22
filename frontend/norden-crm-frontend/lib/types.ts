@@ -8,7 +8,27 @@ export type LeadStatus =
   | 'perdido'
   | 'frio_standby';
 
-export type LeadOrigem = 'meta_ads' | 'site_imobzi' | 'legado_imobzi' | 'importacao_planilha' | 'manual';
+export type LeadOrigem =
+  | 'meta_ads'
+  | 'site_imobzi'
+  | 'legado_imobzi'
+  | 'importacao_planilha'
+  | 'manual'
+  | 'instagram'
+  | 'messenger';
+
+// Canal de conversa da caixa de entrada omnichannel.
+export type Canal = 'whatsapp' | 'instagram' | 'messenger';
+
+export type ContatoCanal = {
+  id: string;
+  canal: Canal;
+  identidadeExterna: string;
+  nomeExibicao: string | null;
+  username: string | null;
+  fotoUrl: string | null;
+  ultimaRecebidaEm: string | null;
+};
 
 export type LeadTemperatura = 'nao_avaliado' | 'frio' | 'morno' | 'quente';
 
@@ -82,7 +102,10 @@ export const ROTULO_STATUS_IA: Record<StatusIA, string> = {
 export type Lead = {
   id: string;
   nome: string | null;
-  telefone: string;
+  // Opcional desde a fase omnichannel: leads de Instagram/Messenger podem
+  // não ter telefone.
+  telefone: string | null;
+  canalPrincipal: Canal;
   email: string | null;
   status: LeadStatus;
   origem: LeadOrigem;
@@ -138,6 +161,9 @@ export type Mensagem = {
   leadId: string;
   direcao: MensagemDirecao;
   conteudo: string;
+  canal?: Canal;
+  midiaUrl?: string | null;
+  tipoMidia?: string | null;
   status: MensagemStatus;
   enviadaPorUsuarioId: string | null;
   enviadaPorUsuario: { id: string; nome: string } | null;
@@ -147,6 +173,26 @@ export type Mensagem = {
 // GET /api/leads/:id retorna o lead + histórico de mensagens
 export type LeadDetalhado = Lead & {
   mensagens: Mensagem[];
+  contatosCanais?: ContatoCanal[];
+};
+
+// Comentário de post (Instagram/Facebook) — caixa de entrada de comentários.
+export type ComentarioSocial = {
+  id: string;
+  canal: Canal;
+  comentarioExternoId: string;
+  postId: string;
+  parentId: string | null;
+  permalink: string | null;
+  direcao: 'recebido' | 'enviado';
+  autorNome: string | null;
+  autorUsername: string | null;
+  texto: string;
+  respondido: boolean;
+  leadId: string | null;
+  lead: { id: string; nome: string | null } | null;
+  criadoEm: string;
+  recebidoEm: string | null;
 };
 
 export const ROTULO_STATUS: Record<LeadStatus, string> = {
