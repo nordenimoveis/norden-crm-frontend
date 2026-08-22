@@ -22,3 +22,11 @@ export async function criarTemplate(input: CriarTemplateInput): Promise<Template
 export async function atualizarTemplate(id: string, input: AtualizarTemplateInput): Promise<TemplateMensagem> {
   return apiFetch<TemplateMensagem>(`/api/templates-mensagem/${id}`, { method: 'PATCH', body: input });
 }
+
+export async function sincronizarTemplatesMeta(): Promise<{
+  criados: number;
+  atualizados: number;
+  total: number;
+}> {
+  return apiFetch('/api/templates-mensagem/sincronizar-meta', { method: 'POST' });
+}

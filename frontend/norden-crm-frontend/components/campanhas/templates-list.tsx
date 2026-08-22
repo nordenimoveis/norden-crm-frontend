@@ -1,17 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { Plus, Loader2, Pencil, CheckCircle2, Clock } from 'lucide-react';
+import { Plus, Loader2, Pencil, CheckCircle2, Clock, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useTemplates } from '@/hooks/use-templates';
+import { useTemplates, useSincronizarTemplatesMeta } from '@/hooks/use-templates';
 import { TemplateFormDialog } from './template-form-dialog';
 import { TemplateMensagem } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
 export function TemplatesList() {
   const { data: templates, isLoading } = useTemplates();
+  const sincronizar = useSincronizarTemplatesMeta();
   const [dialogAberto, setDialogAberto] = useState(false);
   const [itemEditando, setItemEditando] = useState<TemplateMensagem | null>(null);
+  const [resumoSync, setResumoSync] = useState<string | null>(null);
 
   function abrirCriacao() {
     setItemEditando(null);
@@ -29,11 +31,32 @@ export function TemplatesList() {
         <p className="text-sm text-muted-foreground">
           Templates pré-aprovados pela Meta, usados na cadência automática e em campanhas.
         </p>
-        <Button variant="accent" size="sm" onClick={abrirCriacao}>
-          <Plus className="h-4 w-4" />
-          Novo template
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              sincronizar.mutate(undefined, {
+                onSuccess: (r) =>
+                  setResumoSync(`${r.criados} novos, ${r.atualizados} atualizados (de ${r.total}).`),
+                onError: (e) => setResumoSync((e as Error).message),
+              })
+            }
+            disabled={sincronizar.isPending}
+          >
+            <RefreshCw className={cn('h-4 w-4', sincronizar.isPending && 'animate-spin')} />
+            Sincronizar da Meta
+          </Button>
+          <Button variant="accent" size="sm" onClick={abrirCriacao}>
+            <Plus className="h-4 w-4" />
+            Novo template
+          </Button>
+        </div>
       </div>
+
+      {resumoSync && (
+        <p className="rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{resumoSync}</p>
+      )}
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12 text-sm text-muted-foreground">

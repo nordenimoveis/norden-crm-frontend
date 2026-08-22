@@ -9,6 +9,7 @@ export type CriarCampanhaInput = {
   templateMensagemId: string;
   filtroPublico: FiltroPublico;
   midiaUrl?: string;
+  parametros?: string[];
 };
 
 export async function listarCampanhas(): Promise<CampanhaDisparo[]> {
@@ -39,6 +40,32 @@ export async function marcarCampanhaComoPronta(id: string): Promise<CampanhaDisp
 
 export async function iniciarEnvioCampanha(id: string): Promise<CampanhaDisparo> {
   return apiFetch<CampanhaDisparo>(`/api/campanhas-disparo/${id}/iniciar-envio`, { method: 'POST' });
+}
+
+export async function agendarCampanha(id: string, agendadoPara: string): Promise<CampanhaDisparo> {
+  return apiFetch<CampanhaDisparo>(`/api/campanhas-disparo/${id}/agendar`, {
+    method: 'POST',
+    body: { agendadoPara },
+  });
+}
+
+export async function cancelarAgendamentoCampanha(id: string): Promise<CampanhaDisparo> {
+  return apiFetch<CampanhaDisparo>(`/api/campanhas-disparo/${id}/cancelar-agendamento`, {
+    method: 'POST',
+  });
+}
+
+export type EnviarTesteInput = {
+  templateMensagemId: string;
+  telefone: string;
+  midiaUrl?: string;
+  parametros?: string[];
+};
+
+export async function enviarTesteCampanha(
+  input: EnviarTesteInput
+): Promise<{ enviado: boolean; messageId?: string }> {
+  return apiFetch('/api/campanhas-disparo/enviar-teste', { method: 'POST', body: input });
 }
 
 export async function deletarCampanha(id: string): Promise<void> {

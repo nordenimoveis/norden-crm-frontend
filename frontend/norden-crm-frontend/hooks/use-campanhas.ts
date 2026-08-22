@@ -6,8 +6,12 @@ import {
   criarCampanha,
   marcarCampanhaComoPronta,
   iniciarEnvioCampanha,
+  agendarCampanha,
+  cancelarAgendamentoCampanha,
+  enviarTesteCampanha,
   deletarCampanha,
   CriarCampanhaInput,
+  EnviarTesteInput,
 } from '@/lib/campanhas-api';
 import { FiltroPublico } from '@/lib/types';
 
@@ -71,5 +75,29 @@ export function useDeletarCampanha() {
   return useMutation({
     mutationFn: (id: string) => deletarCampanha(id),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas-disparo'] }),
+  });
+}
+
+export function useAgendarCampanha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, agendadoPara }: { id: string; agendadoPara: string }) =>
+      agendarCampanha(id, agendadoPara),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas-disparo'] }),
+  });
+}
+
+export function useCancelarAgendamentoCampanha() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => cancelarAgendamentoCampanha(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['campanhas-disparo'] }),
+  });
+}
+
+/** Envio teste — não invalida nada (não cria campanha), só dispara para um número. */
+export function useEnviarTesteCampanha() {
+  return useMutation({
+    mutationFn: (input: EnviarTesteInput) => enviarTesteCampanha(input),
   });
 }

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Plus, Loader2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useCampanhas } from '@/hooks/use-campanhas';
-import { CampanhaFormDialog } from './campanha-form-dialog';
 import { CampanhaDetailDialog } from './campanha-detail-dialog';
 import { ROTULO_STATUS_CAMPANHA, CampanhaDisparoStatus } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -12,14 +11,14 @@ import { cn } from '@/lib/utils';
 const TOM_STATUS: Record<CampanhaDisparoStatus, string> = {
   rascunho: 'bg-muted text-muted-foreground',
   pronta: 'bg-accent/10 text-accent',
+  agendada: 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400',
   enviando: 'bg-sky-100 text-sky-700',
   concluida: 'bg-online/10 text-online',
   cancelada: 'bg-red-50 text-red-700',
 };
 
-export function CampanhasList() {
+export function CampanhasList({ onNova }: { onNova: () => void }) {
   const { data: campanhas, isLoading } = useCampanhas();
-  const [formAberto, setFormAberto] = useState(false);
   const [detalheId, setDetalheId] = useState<string | null>(null);
 
   return (
@@ -28,7 +27,7 @@ export function CampanhasList() {
         <p className="text-sm text-muted-foreground">
           Campanhas de disparo em massa via WhatsApp, usando templates aprovados pela Meta.
         </p>
-        <Button variant="accent" size="sm" onClick={() => setFormAberto(true)}>
+        <Button variant="accent" size="sm" onClick={onNova}>
           <Plus className="h-4 w-4" />
           Nova campanha
         </Button>
@@ -76,7 +75,6 @@ export function CampanhasList() {
         </div>
       )}
 
-      <CampanhaFormDialog aberto={formAberto} onFechar={() => setFormAberto(false)} />
       <CampanhaDetailDialog campanhaId={detalheId} onFechar={() => setDetalheId(null)} />
     </div>
   );
