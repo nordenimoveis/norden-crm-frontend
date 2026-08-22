@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Search } from 'lucide-react';
 import { useLeadsDoBoard } from '@/hooks/use-leads';
 import { useAuthStore } from '@/store/auth-store';
-import { Lead } from '@/lib/types';
+import { Canal, Lead } from '@/lib/types';
+import { CANAIS, CANAL_META, identificadorLead, nomeExibicaoLead } from '@/lib/canais';
 import { cn } from '@/lib/utils';
 
 function iniciais(nome: string) {
@@ -37,16 +38,22 @@ export function ConversationList({
 }) {
   const usuario = useAuthStore((state) => state.usuario);
   const [busca, setBusca] = useState('');
+  const [canalFiltro, setCanalFiltro] = useState<Canal | 'todos'>('todos');
   const { data, isLoading } = useLeadsDoBoard({});
 
   const conversas = useMemo(() => {
     const items = data?.items ?? [];
+    const porCanal =
+      canalFiltro === 'todos'
+        ? items
+        : items.filter((l) => (l.canalPrincipal ?? 'whatsapp') === canalFiltro);
     const filtradas = busca
-      ? items.filter(
+      ? porCanal.filter(
           (l) =>
-            (l.nome ?? '').toLowerCase().includes(busca.toLowerCase()) || l.telefone.includes(busca)
+            (l.nome ?? '').toLowerCase().includes(busca.toLowerCase()) ||
+            (l.telefone ?? '').includes(busca)
         )
-      : items;
+      : porCanal;
 
     // Mais recente primeiro — quem nunca trocou mensagem fica no final
     return [...filtradas].sort((a, b) => {
@@ -54,7 +61,7 @@ export function ConversationList({
       const tb = b.ultimaMensagemEm ? new Date(b.ultimaMensagemEm).getTime() : 0;
       return tb - ta;
     });
-  }, [data, busca]);
+  }, [data, busca, canalFiltro]);
 
   // Quando a conversa ativa muda (ex: abrindo um link direto com ?leadId=,
   // vindo da Agenda, de Campanhas, ou de "Meus Leads"), garante que ela
@@ -85,6 +92,24 @@ export function ConversationList({
             className="w-full rounded-md border border-sidebar-border bg-white/5 py-2 pl-8 pr-3 text-sm text-sidebar-foreground placeholder:text-sidebar-muted focus:outline-none focus-visible:ring-1 focus-visible:ring-accent"
           />
         </div>
+
+        {/* Filtro por canal — WhatsApp / Instagram / Messenger, ou todos. */}
+        <div className="mt-2 flex items-center gap-1">
+          <FiltroCanalBotao
+            ativo={canalFiltro === 'todos'}
+            onClick={() => setCanalFiltro('todos')}
+            rotulo="Todos"
+          />
+          {CANAIS.map((c) => (
+            <FiltroCanalBotao
+              key={c}
+              ativo={canalFiltro === c}
+              onClick={() => setCanalFiltro(c)}
+              rotulo={CANAL_META[c].emoji}
+              titulo={CANAL_META[c].rotulo}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto">
@@ -95,7 +120,8 @@ export function ConversationList({
         ) : (
           conversas.map((lead: Lead) => {
             const ativo = lead.id === leadIdAtivo;
-            const nomeExibicao = lead.nome || lead.telefone;
+            const nomeExibicao = nomeExibicaoLead(lead);
+            const canal = lead.canalPrincipal ?? 'whatsapp';
 
             return (
               <button
@@ -122,6 +148,17 @@ export function ConversationList({
                   {lead.naoLida && (
                     <span className="absolute -right-0.5 -top-0.5 h-3 w-3 animate-pulse rounded-full border-2 border-sidebar bg-sky-500" />
                   )}
+                  {/* Selo do canal — identifica de imediato se é WhatsApp,
+                      Instagram ou Messenger, como no Respond.io. */}
+                  <span
+                    className={cn(
+                      'absolute -bottom-1 -left-1 flex h-4 w-4 items-center justify-center rounded-full border-2 border-sidebar text-[8px]',
+                      CANAL_META[canal].corBg
+                    )}
+                    title={CANAL_META[canal].rotulo}
+                  >
+                    {CANAL_META[canal].emoji}
+                  </span>
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -147,7 +184,7 @@ export function ConversationList({
                     )}
                   >
                     {usuario?.papel !== 'corretor' && lead.corretor ? `${lead.corretor.nome} · ` : ''}
-                    {lead.telefone}
+                    {identificadorLead(lead)}
                   </p>
                 </div>
               </button>
@@ -156,5 +193,33 @@ export function ConversationList({
         )}
       </div>
     </div>
+  );
+}
+
+function FiltroCanalBotao({
+  ativo,
+  onClick,
+  rotulo,
+  titulo,
+}: {
+  ativo: boolean;
+  onClick: () => void;
+  rotulo: string;
+  titulo?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={titulo ?? rotulo}
+      className={cn(
+        'rounded-md px-2 py-1 text-xs font-medium transition-colors',
+        ativo
+          ? 'bg-accent/20 text-accent'
+          : 'text-sidebar-muted hover:bg-white/5 hover:text-sidebar-foreground'
+      )}
+    >
+      {rotulo}
+    </button>
   );
 }

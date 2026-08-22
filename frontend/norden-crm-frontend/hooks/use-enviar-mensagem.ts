@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { enviarMensagemTexto } from '@/lib/chat-api';
-import { LeadDetalhado, Mensagem } from '@/lib/types';
+import { Canal, LeadDetalhado, Mensagem } from '@/lib/types';
 
 /**
  * Envio otimista: o balão aparece na hora (status 'pendente', id temporário),
@@ -9,12 +9,16 @@ import { LeadDetalhado, Mensagem } from '@/lib/types';
  * isso evita duplicar a mensagem quando o evento `nova_mensagem` do Pusher
  * chegar depois (o listener do Pusher ignora mensagens cujo id já existe).
  */
-export function useEnviarMensagem(leadId: string, telefone: string) {
+export function useEnviarMensagem(
+  leadId: string,
+  telefone: string | null,
+  canal: Canal = 'whatsapp'
+) {
   const queryClient = useQueryClient();
   const queryKey = ['lead', leadId];
 
   return useMutation({
-    mutationFn: (texto: string) => enviarMensagemTexto(leadId, telefone, texto),
+    mutationFn: (texto: string) => enviarMensagemTexto(leadId, telefone, texto, canal),
 
     onMutate: async (texto: string) => {
       await queryClient.cancelQueries({ queryKey });
@@ -25,6 +29,7 @@ export function useEnviarMensagem(leadId: string, telefone: string) {
         leadId,
         direcao: 'enviada',
         conteudo: texto,
+        canal,
         status: 'pendente',
         enviadaPorUsuarioId: null,
         enviadaPorUsuario: null,

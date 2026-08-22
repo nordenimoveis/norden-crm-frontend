@@ -24,7 +24,11 @@ export function ChatPanel({ leadId, onFechar }: { leadId: string; onFechar: () =
   useChatRealtime(leadId);
 
   const usuario = useAuthStore((state) => state.usuario);
-  const enviarMensagem = useEnviarMensagem(leadId, lead?.telefone ?? '');
+  const enviarMensagem = useEnviarMensagem(
+    leadId,
+    lead?.telefone ?? null,
+    lead?.canalPrincipal ?? 'whatsapp'
+  );
 
   const [texto, setTexto] = useState('');
   const [indiceAtivo, setIndiceAtivo] = useState(0);
@@ -134,7 +138,7 @@ export function ChatPanel({ leadId, onFechar }: { leadId: string; onFechar: () =
       <div className="flex items-start justify-between border-b border-border p-4">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-medium text-foreground">{lead.nome || lead.telefone}</p>
+            <p className="truncate text-sm font-medium text-foreground">{lead.nome || lead.telefone || 'Contato'}</p>
             <button
               onClick={() => setEditandoLead(true)}
               className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"

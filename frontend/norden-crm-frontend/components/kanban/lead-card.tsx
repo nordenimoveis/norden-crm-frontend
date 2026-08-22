@@ -31,7 +31,7 @@ export function LeadCard({ lead, onAbrir }: { lead: Lead; onAbrir: (leadId: stri
     data: { status: lead.status },
   });
 
-  const nomeExibicao = lead.nome || lead.telefone;
+  const nomeExibicao = lead.nome || lead.telefone || 'Contato';
   const respondeuRecentemente = lead.status === 'respondeu' && lead.atendimentoHumano;
   const tipoAgendamento = lead.tipoAgendamento ?? 'outro';
   const IconeAgendamento = ICONE_TIPO[tipoAgendamento];

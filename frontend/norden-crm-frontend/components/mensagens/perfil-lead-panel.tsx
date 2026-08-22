@@ -13,6 +13,7 @@ import { TransferirCorretorSelect } from '@/components/leads-table/transferir-co
 import { InteligenciaNorden } from './inteligencia-norden';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ROTULO_TIPO_AGENDAMENTO, ROTULO_STATUS, ROTULO_STATUS_IA, LeadStatus, LeadTemperatura, StatusIA } from '@/lib/types';
+import { CANAL_META, nomeExibicaoLead } from '@/lib/canais';
 
 const ROTULO_TEMPERATURA: Record<LeadTemperatura, string> = {
   nao_avaliado: 'Não avaliado',
@@ -57,7 +58,8 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
 
   if (!lead) return <div className="w-[320px] shrink-0 border-l border-border bg-card" />;
 
-  const nomeExibicao = lead.nome || lead.telefone;
+  const nomeExibicao = nomeExibicaoLead(lead);
+  const canal = lead.canalPrincipal ?? 'whatsapp';
 
   async function enviarNota() {
     const texto = novaNota.trim();
@@ -73,7 +75,12 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
           {iniciais(nomeExibicao)}
         </div>
         <p className="text-base font-medium text-foreground">{nomeExibicao}</p>
-        <p className="text-sm text-muted-foreground">{lead.telefone}</p>
+        <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
+          <span className={`text-xs ${CANAL_META[canal].cor}`}>
+            {CANAL_META[canal].emoji} {CANAL_META[canal].rotulo}
+          </span>
+          {lead.telefone ? <span>· {lead.telefone}</span> : null}
+        </p>
 
         <div className="mt-4 flex w-full gap-2">
           <button
@@ -83,13 +90,15 @@ export function PerfilLeadPanel({ leadId }: { leadId: string }) {
             <Pencil className="h-3.5 w-3.5" />
             Editar
           </button>
-          <a
-            href={`tel:${lead.telefone}`}
-            className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
-          >
-            <Phone className="h-3.5 w-3.5" />
-            Ligar
-          </a>
+          {lead.telefone && (
+            <a
+              href={`tel:${lead.telefone}`}
+              className="flex flex-1 items-center justify-center gap-1.5 rounded-md border border-border bg-muted/30 py-2 text-xs font-medium text-foreground transition-colors hover:bg-muted"
+            >
+              <Phone className="h-3.5 w-3.5" />
+              Ligar
+            </a>
+          )}
         </div>
       </div>
 

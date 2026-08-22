@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Users, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSincronizarLeadsImobzi } from '@/hooks/use-imobzi-integracao';
+import { CANAIS, CANAL_META } from '@/lib/canais';
 import { cn } from '@/lib/utils';
 
 export function IntegracoesTab() {
@@ -59,6 +60,45 @@ export function IntegracoesTab() {
             {erro}
           </p>
         )}
+      </div>
+
+      {/* Canais da caixa de entrada omnichannel */}
+      <div className="rounded-lg border border-border p-4">
+        <p className="text-sm font-medium text-foreground">Canais de atendimento (Meta)</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          A caixa de entrada unificada atende WhatsApp, Instagram Direct e Messenger, além de
+          responder comentários dos seus posts. Todos usam a Graph API da Meta.
+        </p>
+
+        <div className="mt-3 space-y-2">
+          {CANAIS.map((c) => (
+            <div
+              key={c}
+              className="flex items-center justify-between rounded-md border border-border bg-muted/20 px-3 py-2"
+            >
+              <span className="flex items-center gap-2 text-sm text-foreground">
+                <span className={cn('text-base', CANAL_META[c].cor)}>{CANAL_META[c].emoji}</span>
+                {CANAL_META[c].rotulo}
+              </span>
+              <span className="text-xs text-muted-foreground">
+                {c === 'whatsapp' ? 'WhatsApp Cloud API' : 'Página + Instagram Business'}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-3 rounded-md bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+          <p className="font-medium text-foreground">Configuração do webhook</p>
+          <p className="mt-1">
+            No App da Meta, aponte o webhook de Instagram/Messenger para{' '}
+            <code className="rounded bg-background px-1 py-0.5">/webhooks/meta-messaging</code> e
+            assine os campos <code className="rounded bg-background px-1 py-0.5">messages</code>,{' '}
+            <code className="rounded bg-background px-1 py-0.5">messaging_postbacks</code>,{' '}
+            <code className="rounded bg-background px-1 py-0.5">comments</code> e{' '}
+            <code className="rounded bg-background px-1 py-0.5">feed</code>. O WhatsApp continua em{' '}
+            <code className="rounded bg-background px-1 py-0.5">/webhooks/whatsapp</code>.
+          </p>
+        </div>
       </div>
 
       <p className="text-xs text-muted-foreground">
