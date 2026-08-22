@@ -18,6 +18,7 @@ import {
   useDeletarCampanha,
 } from '@/hooks/use-campanhas';
 import { ROTULO_STATUS_CAMPANHA } from '@/lib/types';
+import { cn } from '@/lib/utils';
 
 export function CampanhaDetailDialog({
   campanhaId,
@@ -133,10 +134,28 @@ export function CampanhaDetailDialog({
                   {campanha.destinatarios.map((d) => (
                     <div
                       key={d.id}
-                      className="flex items-center justify-between border-b border-border px-3 py-1.5 text-sm last:border-0"
+                      className="border-b border-border px-3 py-1.5 text-sm last:border-0"
                     >
-                      <span className="text-foreground">{d.lead.nome || d.lead.telefone}</span>
-                      <span className="text-xs text-muted-foreground">{d.status}</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-foreground">{d.lead.nome || d.lead.telefone}</span>
+                        <span
+                          className={cn(
+                            'text-xs',
+                            d.status === 'enviado'
+                              ? 'text-online'
+                              : d.status === 'falhou'
+                                ? 'text-red-600 dark:text-red-400'
+                                : 'text-muted-foreground'
+                          )}
+                        >
+                          {d.status}
+                        </span>
+                      </div>
+                      {d.status === 'falhou' && d.erro && (
+                        <p className="mt-0.5 text-[11px] leading-snug text-red-600 dark:text-red-400">
+                          {d.erro}
+                        </p>
+                      )}
                     </div>
                   ))}
                   {campanha._count.destinatarios > campanha.destinatarios.length && (
