@@ -283,6 +283,7 @@ export type CampanhaDisparo = {
   criadoEm: string;
   atualizadoEm: string;
   _count: { destinatarios: number };
+  progresso?: { pendente: number; enviado: number; falhou: number };
 };
 
 export type CampanhaDisparoDestinatario = {

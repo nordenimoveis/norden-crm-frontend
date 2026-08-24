@@ -128,7 +128,7 @@ export function CampanhaDetailDialog({
 
               <div>
                 <p className="mb-1.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                  Amostra de destinatários
+                  Relatório de entrega
                 </p>
                 <div className="max-h-48 space-y-1 overflow-y-auto rounded-md border border-border">
                   {campanha.destinatarios.map((d) => (
@@ -168,32 +168,30 @@ export function CampanhaDetailDialog({
             </div>
 
             <DialogFooter className="justify-between sm:justify-between">
-              {campanha.status === 'rascunho' && (
-                <div>
-                  {confirmandoExclusao ? (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-red-200 text-red-700 hover:bg-red-50"
-                        onClick={confirmarExclusao}
-                        disabled={deletar.isPending}
-                      >
-                        {deletar.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                        Confirmar exclusão
-                      </Button>
-                      <Button variant="outline" size="sm" onClick={() => setConfirmandoExclusao(false)}>
-                        Cancelar
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button variant="outline" size="sm" onClick={() => setConfirmandoExclusao(true)}>
-                      <Trash2 className="h-3.5 w-3.5" />
-                      Excluir rascunho
+              <div>
+                {confirmandoExclusao ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-red-200 text-red-700 hover:bg-red-50"
+                      onClick={confirmarExclusao}
+                      disabled={deletar.isPending}
+                    >
+                      {deletar.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
+                      Confirmar exclusão
                     </Button>
-                  )}
-                </div>
-              )}
+                    <Button variant="outline" size="sm" onClick={() => setConfirmandoExclusao(false)}>
+                      Cancelar
+                    </Button>
+                  </div>
+                ) : (
+                  <Button variant="outline" size="sm" onClick={() => setConfirmandoExclusao(true)}>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    Excluir campanha
+                  </Button>
+                )}
+              </div>
 
               <div className="flex gap-2">
                 <Button variant="outline" onClick={onFechar}>
