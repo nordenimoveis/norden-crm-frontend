@@ -19,8 +19,12 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const ehRotaDeLogin = pathname.startsWith('/login');
+  // Páginas públicas (não exigem login): política de privacidade e termos —
+  // precisam ficar acessíveis sem sessão para a Meta e para qualquer visitante.
+  const ehRotaPublica =
+    pathname.startsWith('/privacidade') || pathname.startsWith('/termos');
 
-  if (!token && !ehRotaDeLogin) {
+  if (!token && !ehRotaDeLogin && !ehRotaPublica) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     url.searchParams.set('redirecionarPara', pathname);
