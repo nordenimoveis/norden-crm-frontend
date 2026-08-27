@@ -111,6 +111,7 @@ export type Lead = {
   origem: LeadOrigem;
   temperatura: LeadTemperatura;
   atendimentoHumano: boolean;
+  arquivada?: boolean;
   corretorId: string | null;
   corretor: Usuario | null;
   imovel: Imovel | null;

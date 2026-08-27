@@ -1,16 +1,34 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Loader2, AlertCircle, MoreVertical } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Send, Loader2, AlertCircle, MoreVertical, Archive, ArchiveRestore, Trash2 } from 'lucide-react';
 import { useLeadDetalhado } from '@/hooks/use-lead-detalhado';
 import { useEnviarMensagem } from '@/hooks/use-enviar-mensagem';
 import { useChatRealtime } from '@/hooks/use-chat-realtime';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
+import { useArquivarLead, useDeletarLead } from '@/hooks/use-leads-acoes';
 import { useAuthStore } from '@/store/auth-store';
 import { useUiStore } from '@/store/ui-store';
 import { substituirVariaveis } from '@/lib/template-variaveis';
 import { MessageBubble } from '@/components/chat/message-bubble';
 import { QuickReplyPopover } from '@/components/chat/quick-reply-popover';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 import { QuickReply } from '@/lib/types';
 import { CANAL_META, identificadorLead, nomeExibicaoLead } from '@/lib/canais';
 import { cn } from '@/lib/utils';
@@ -22,6 +40,26 @@ export function ChatCentral({ leadId }: { leadId: string }) {
   const usuario = useAuthStore((state) => state.usuario);
   const canalLead = lead?.canalPrincipal ?? 'whatsapp';
   const enviarMensagem = useEnviarMensagem(leadId, lead?.telefone ?? null, canalLead);
+
+  const router = useRouter();
+  const arquivar = useArquivarLead();
+  const deletar = useDeletarLead();
+  const [confirmandoExclusao, setConfirmandoExclusao] = useState(false);
+  const podeExcluir = usuario?.papel === 'gestor' || usuario?.papel === 'admin';
+
+  async function alternarArquivo() {
+    if (!lead) return;
+    await arquivar.mutateAsync({ leadId: lead.id, arquivada: !lead.arquivada });
+    // Arquivar tira a conversa do inbox — volta para a lista.
+    if (!lead.arquivada) router.push('/mensagens', { scroll: false });
+  }
+
+  async function confirmarExclusao() {
+    if (!lead) return;
+    await deletar.mutateAsync(lead.id);
+    setConfirmandoExclusao(false);
+    router.push('/mensagens', { scroll: false });
+  }
 
   const [texto, setTexto] = useState('');
   const [indiceAtivo, setIndiceAtivo] = useState(0);
@@ -131,10 +169,68 @@ export function ChatCentral({ leadId }: { leadId: string }) {
             {identificadorLead(lead)}
           </p>
         </div>
-        <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-          <MoreVertical className="h-4 w-4" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
+              <MoreVertical className="h-4 w-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onSelect={() => void alternarArquivo()}>
+              {lead.arquivada ? (
+                <>
+                  <ArchiveRestore className="mr-2 h-4 w-4" />
+                  Desarquivar conversa
+                </>
+              ) : (
+                <>
+                  <Archive className="mr-2 h-4 w-4" />
+                  Arquivar conversa
+                </>
+              )}
+            </DropdownMenuItem>
+            {podeExcluir && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-red-600 focus:bg-red-50 focus:text-red-700 dark:focus:bg-red-950"
+                  onSelect={() => setConfirmandoExclusao(true)}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Excluir conversa
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+
+      <Dialog open={confirmandoExclusao} onOpenChange={setConfirmandoExclusao}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir conversa</DialogTitle>
+            <DialogDescription>
+              Isso apaga em definitivo o lead <strong>{nomeExibicaoLead(lead)}</strong> e todo o
+              histórico (mensagens, notas, agendamentos). Esta ação não pode ser desfeita. Se quiser
+              apenas tirar do inbox, use <em>Arquivar</em>.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmandoExclusao(false)} disabled={deletar.isPending}>
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              className="border-red-200 text-red-700 hover:bg-red-50"
+              onClick={confirmarExclusao}
+              disabled={deletar.isPending}
+            >
+              {deletar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {lead.status === 'respondeu' && lead.atendimentoHumano && (
         <div className="flex items-center gap-1.5 border-b border-red-100 bg-red-50 px-5 py-2 text-xs font-medium text-red-700">
