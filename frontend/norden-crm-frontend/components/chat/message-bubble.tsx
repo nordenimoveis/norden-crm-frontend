@@ -21,6 +21,17 @@ export function MessageBubble({ mensagem }: { mensagem: Mensagem }) {
       >
         <p className="whitespace-pre-wrap break-words">{mensagem.conteudo}</p>
 
+        {mensagem.status === 'falhou' && mensagem.erro && (
+          <p
+            className={cn(
+              'mt-1 rounded-md px-2 py-1 text-[11px] leading-snug',
+              éNossa ? 'bg-red-500/15 text-red-200' : 'bg-red-50 text-red-600'
+            )}
+          >
+            Não entregue: {mensagem.erro}
+          </p>
+        )}
+
         <div
           className={cn(
             'mt-1 flex items-center justify-end gap-1 text-[10px]',
@@ -31,7 +42,7 @@ export function MessageBubble({ mensagem }: { mensagem: Mensagem }) {
             <span className="mr-1 italic">{mensagem.enviadaPorUsuario.nome}</span>
           )}
           <span>{formatarHora(mensagem.criadoEm)}</span>
-          {éNossa && <MessageStatusIcon status={mensagem.status} />}
+          {éNossa && <MessageStatusIcon status={mensagem.status} erro={mensagem.erro} />}
         </div>
       </div>
     </div>
