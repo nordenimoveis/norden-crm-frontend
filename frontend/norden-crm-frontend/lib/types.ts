@@ -165,6 +165,8 @@ export type Mensagem = {
   midiaUrl?: string | null;
   tipoMidia?: string | null;
   status: MensagemStatus;
+  // Motivo da não-entrega (código + descrição da Meta) quando status = 'falhou'.
+  erro?: string | null;
   enviadaPorUsuarioId: string | null;
   enviadaPorUsuario: { id: string; nome: string } | null;
   criadoEm: string;
