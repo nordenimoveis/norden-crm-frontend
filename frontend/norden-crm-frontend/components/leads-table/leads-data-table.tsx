@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Loader2, Upload, Download, UserPlus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Loader2, Upload, Download, UserPlus, Trash2 } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -19,11 +19,20 @@ import { TransferirCorretorSelect } from './transferir-corretor-select';
 import { FiltrosTabela } from './filtros-tabela';
 import { ImportContactsDialog } from './import-contacts-dialog';
 import { NovoLeadDialog } from './novo-lead-dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
 import { useLeadsTabela } from '@/hooks/use-leads-tabela';
+import { useDeletarLead } from '@/hooks/use-leads-acoes';
 import { useAuthStore } from '@/store/auth-store';
 import { FiltrosTabelaLeads } from '@/lib/leads-api';
 import { exportarContatos } from '@/lib/contatos-api';
-import { ROTULO_STATUS } from '@/lib/types';
+import { ROTULO_STATUS, Lead } from '@/lib/types';
 
 const TAMANHO_PAGINA = 15;
 
@@ -36,7 +45,15 @@ export function LeadsDataTable() {
   const [importAberto, setImportAberto] = useState(false);
   const [novoLeadAberto, setNovoLeadAberto] = useState(false);
   const [exportando, setExportando] = useState(false);
+  const [leadParaExcluir, setLeadParaExcluir] = useState<Lead | null>(null);
+  const deletar = useDeletarLead();
   const { data, isLoading, isPlaceholderData } = useLeadsTabela(filtros);
+
+  async function confirmarExclusao() {
+    if (!leadParaExcluir) return;
+    await deletar.mutateAsync(leadParaExcluir.id);
+    setLeadParaExcluir(null);
+  }
 
   const totalPaginas = data ? Math.max(1, Math.ceil(data.total / TAMANHO_PAGINA)) : 1;
 
@@ -85,6 +102,32 @@ export function LeadsDataTable() {
       <NovoLeadDialog aberto={novoLeadAberto} onFechar={() => setNovoLeadAberto(false)} />
       <ImportContactsDialog aberto={importAberto} onFechar={() => setImportAberto(false)} />
 
+      <Dialog open={!!leadParaExcluir} onOpenChange={(v) => !v && setLeadParaExcluir(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Excluir lead</DialogTitle>
+            <DialogDescription>
+              Isso apaga em definitivo <strong>{leadParaExcluir?.nome || leadParaExcluir?.telefone}</strong>{' '}
+              e todo o histórico (mensagens, notas, agendamentos). Esta ação não pode ser desfeita.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setLeadParaExcluir(null)} disabled={deletar.isPending}>
+              Cancelar
+            </Button>
+            <Button
+              variant="outline"
+              className="border-red-200 text-red-700 hover:bg-red-50"
+              onClick={confirmarExclusao}
+              disabled={deletar.isPending}
+            >
+              {deletar.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              Excluir definitivamente
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center text-sm text-muted-foreground">
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -102,12 +145,13 @@ export function LeadsDataTable() {
                 <TableHead>Temperatura</TableHead>
                 <TableHead>Alerta</TableHead>
                 {ehGestorOuAdmin && <TableHead>Corretor</TableHead>}
+                {ehGestorOuAdmin && <TableHead className="w-10"></TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {data?.items.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={ehGestorOuAdmin ? 7 : 6} className="text-center text-sm text-muted-foreground">
+                  <TableCell colSpan={ehGestorOuAdmin ? 8 : 6} className="text-center text-sm text-muted-foreground">
                     Nenhum lead encontrado com esses filtros.
                   </TableCell>
                 </TableRow>
@@ -134,6 +178,20 @@ export function LeadsDataTable() {
                   {ehGestorOuAdmin && (
                     <TableCell>
                       <TransferirCorretorSelect leadId={lead.id} corretorAtualId={lead.corretorId} />
+                    </TableCell>
+                  )}
+                  {ehGestorOuAdmin && (
+                    <TableCell>
+                      <button
+                        title="Excluir lead"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setLeadParaExcluir(lead);
+                        }}
+                        className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </TableCell>
                   )}
                 </TableRow>

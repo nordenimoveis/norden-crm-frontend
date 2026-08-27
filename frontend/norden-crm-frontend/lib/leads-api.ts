@@ -118,3 +118,16 @@ export async function criarLeadManual(input: CriarLeadManualInput): Promise<Lead
     body: input,
   });
 }
+
+/** Arquiva/desarquiva uma conversa (some do inbox/lista, sem apagar). */
+export async function arquivarLead(leadId: string, arquivada: boolean): Promise<Lead> {
+  return apiFetch<Lead>(`/api/leads/${leadId}/arquivar`, {
+    method: 'PATCH',
+    body: { arquivada },
+  });
+}
+
+/** Exclui um lead em definitivo (lead + histórico). Só gestor/admin. */
+export async function deletarLead(leadId: string): Promise<void> {
+  await apiFetch<void>(`/api/leads/${leadId}`, { method: 'DELETE' });
+}
