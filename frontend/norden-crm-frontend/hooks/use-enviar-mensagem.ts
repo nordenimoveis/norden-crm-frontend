@@ -55,13 +55,17 @@ export function useEnviarMensagem(
       });
     },
 
-    onError: (_err, _texto, contexto) => {
-      // Falhou — remove o balão otimista (o corretor precisa tentar de novo)
+    onError: (err, _texto, contexto) => {
+      // Falhou — em vez de sumir com o balão (o corretor ficaria sem saber),
+      // mantém a mensagem marcada como 'falhou' com o motivo (ex.: janela 24h).
+      const motivo = err instanceof Error ? err.message : 'Falha ao enviar a mensagem.';
       queryClient.setQueryData<LeadDetalhado>(queryKey, (atual) => {
         if (!atual) return atual;
         return {
           ...atual,
-          mensagens: atual.mensagens.filter((m) => m.id !== contexto?.idTemporario),
+          mensagens: atual.mensagens.map((m) =>
+            m.id === contexto?.idTemporario ? { ...m, status: 'falhou', erro: motivo } : m
+          ),
         };
       });
     },
