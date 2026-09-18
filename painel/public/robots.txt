@@ -1,0 +1,3 @@
+# Painel interno da Norden — não indexar.
+User-agent: *
+Disallow: /
