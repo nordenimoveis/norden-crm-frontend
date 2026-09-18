@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Norden CRM — identidade visual própria.
+ * Referência: imobiliária de alto padrão. Paleta sóbria em tom "papel + tinta",
+ * com um acento discreto de latão/ocre. Nada de cores saturadas de dashboard.
+ * Tipografia: sans limpa no corpo (Inter) e uma serifada discreta em títulos (Fraunces).
+ */
+
+@layer base {
+  :root {
+    /* Neutros — papel quente e tinta profunda */
+    --background: 40 30% 97.5%;
+    --foreground: 200 16% 13%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 200 16% 13%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 200 16% 13%;
+
+    --muted: 38 20% 93%;
+    --muted-foreground: 200 8% 40%;
+
+    --border: 38 16% 87%;
+    --input: 38 16% 84%;
+
+    /* Primário — tinta ardósia profunda (botões, texto forte) */
+    --primary: 200 24% 16%;
+    --primary-foreground: 40 30% 97.5%;
+
+    --secondary: 38 22% 92%;
+    --secondary-foreground: 200 20% 20%;
+
+    /* Acento — latão/ocre, usado com parcimônia (foco, detalhes premium) */
+    --accent: 34 44% 49%;
+    --accent-foreground: 40 33% 98%;
+
+    --destructive: 4 62% 46%;
+    --destructive-foreground: 40 33% 98%;
+
+    --ring: 34 38% 44%;
+
+    --radius: 0.625rem;
+
+    /* Temperaturas do lead */
+    --temp-neutro: 200 8% 55%;
+    --temp-frio: 205 42% 48%;
+    --temp-morno: 34 68% 50%;
+    --temp-quente: 8 66% 50%;
+  }
+
+  :root:not([data-theme='light']) {
+    /* mantém o claro como padrão; o escuro entra por [data-theme='dark'] ou .dark */
+  }
+
+  [data-theme='dark'],
+  .dark {
+    --background: 200 20% 9%;
+    --foreground: 40 24% 92%;
+
+    --card: 200 18% 12%;
+    --card-foreground: 40 24% 92%;
+
+    --popover: 200 18% 12%;
+    --popover-foreground: 40 24% 92%;
+
+    --muted: 200 12% 18%;
+    --muted-foreground: 200 8% 62%;
+
+    --border: 200 12% 20%;
+    --input: 200 12% 24%;
+
+    --primary: 40 26% 90%;
+    --primary-foreground: 200 24% 14%;
+
+    --secondary: 200 12% 18%;
+    --secondary-foreground: 40 24% 90%;
+
+    --accent: 34 46% 54%;
+    --accent-foreground: 200 24% 12%;
+
+    --destructive: 4 58% 52%;
+    --destructive-foreground: 40 33% 96%;
+
+    --ring: 34 42% 52%;
+
+    --temp-neutro: 200 8% 58%;
+    --temp-frio: 205 48% 60%;
+    --temp-morno: 34 70% 58%;
+    --temp-quente: 8 68% 60%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme='light']) {
+      --background: 200 20% 9%;
+      --foreground: 40 24% 92%;
+      --card: 200 18% 12%;
+      --card-foreground: 40 24% 92%;
+      --popover: 200 18% 12%;
+      --popover-foreground: 40 24% 92%;
+      --muted: 200 12% 18%;
+      --muted-foreground: 200 8% 62%;
+      --border: 200 12% 20%;
+      --input: 200 12% 24%;
+      --primary: 40 26% 90%;
+      --primary-foreground: 200 24% 14%;
+      --secondary: 200 12% 18%;
+      --secondary-foreground: 40 24% 90%;
+      --accent: 34 46% 54%;
+      --accent-foreground: 200 24% 12%;
+      --destructive: 4 58% 52%;
+      --destructive-foreground: 40 33% 96%;
+      --ring: 34 42% 52%;
+      --temp-neutro: 200 8% 58%;
+      --temp-frio: 205 48% 60%;
+      --temp-morno: 34 70% 58%;
+      --temp-quente: 8 68% 60%;
+    }
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Títulos com a serifada discreta (a classe utilitária .font-display do
+     Tailwind continua disponível para uso explícito). */
+  h1, h2, h3 {
+    font-family: var(--font-display), Georgia, serif;
+    letter-spacing: -0.01em;
+  }
+}
+
+@layer utilities {
+  /* Rolagem horizontal do Kanban no celular, sem barra visível. */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
