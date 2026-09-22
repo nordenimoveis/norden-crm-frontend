@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ArrowRightLeft, Ban, Check, ChevronDown, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
@@ -18,7 +18,7 @@ import {
 import { TemperatureControl } from '@/components/kanban/temperature-control';
 import { LossReasonDialog } from '@/components/kanban/loss-reason-dialog';
 import { ChatView } from '@/components/lead-panel/chat/chat-view';
-import { useDraft } from '@/components/realtime-provider';
+import { useDraft, useUnread } from '@/components/realtime-provider';
 import { useLeadDetail, useLeadActions } from '@/hooks/use-lead-detail';
 import { useStages } from '@/hooks/use-pipeline';
 import { useBrokers } from '@/hooks/use-brokers';
@@ -85,6 +85,9 @@ function PanelBody({ leadId }: { leadId: string }) {
   const [lostPending, setLostPending] = useState<LeadSummary | null>(null);
   const [tab, setTab] = useState<'resumo' | 'conversa'>('resumo');
   const { draft, clearDraft } = useDraft(leadId);
+  const { markRead } = useUnread();
+  // Abrir o lead zera o contador de não lidas dele.
+  useEffect(() => markRead(leadId), [leadId, markRead]);
 
   if (isLoading) return <PanelSkeleton />;
   if (isError || !data) {

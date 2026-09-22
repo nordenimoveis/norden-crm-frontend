@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { LayoutGrid, LogOut, Settings } from 'lucide-react';
+import { Bell, BellRing, LayoutGrid, LogOut, Settings, Volume2, VolumeX } from 'lucide-react';
 import { NordenMark } from '@/components/norden-mark';
 import { Button } from '@/components/ui/button';
 import {
@@ -13,9 +13,57 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useSession } from '@/components/session-provider';
+import { useUnread } from '@/components/realtime-provider';
 import { logout } from '@/lib/api/client';
 import { initials, firstName } from '@/lib/utils';
 import { isManager } from '@/lib/types';
+
+/** Sino de avisos: contador de não lidas + controles de notificação e som. */
+function NotificationsBell() {
+  const { totalUnread, notifStatus, enableNotifications, soundOn, toggleSound } = useUnread();
+  const has = totalUnread > 0;
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          title={has ? `${totalUnread} mensagem(ns) não lida(s)` : 'Avisos'}
+          aria-label={has ? `${totalUnread} não lidas` : 'Avisos'}
+        >
+          {has ? <BellRing className="text-accent" /> : <Bell />}
+          {has && (
+            <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
+              {totalUnread > 99 ? '99+' : totalUnread}
+            </span>
+          )}
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuLabel>{has ? `${totalUnread} não lida(s)` : 'Avisos'}</DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {notifStatus === 'granted' ? (
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            Notificações do navegador ativas
+          </DropdownMenuLabel>
+        ) : notifStatus === 'denied' ? (
+          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+            Notificações bloqueadas no navegador
+          </DropdownMenuLabel>
+        ) : notifStatus !== 'unsupported' ? (
+          <DropdownMenuItem onClick={enableNotifications}>
+            <BellRing className="size-4" /> Ativar notificações
+          </DropdownMenuItem>
+        ) : null}
+        <DropdownMenuItem onClick={toggleSound}>
+          {soundOn ? <Volume2 className="size-4" /> : <VolumeX className="size-4" />}
+          Som: {soundOn ? 'ligado' : 'desligado'}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
 
 /** Barra superior do painel: marca, identidade do usuário e sair. */
 export function AppTopbar() {
@@ -30,6 +78,7 @@ export function AppTopbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <NotificationsBell />
           {manager && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

@@ -6,6 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { SOURCE_LABELS, type LeadSummary, type Temperature } from '@/lib/types';
+import { useUnread } from '@/components/realtime-provider';
 import { TemperatureControl, TemperatureDot } from './temperature-control';
 import { cn } from '@/lib/utils';
 
@@ -19,11 +20,13 @@ interface ViewProps extends React.HTMLAttributes<HTMLDivElement> {
   /** Etapa de papel LOST → cartão discreto com o motivo. */
   lost?: boolean;
   lostReasonLabel?: string | null;
+  /** Mensagens do cliente ainda não lidas neste lead. */
+  unread?: number;
 }
 
 /** Card do lead (apresentação pura). O arraste é adicionado por <LeadCard>. */
 export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function LeadCardView(
-  { lead, onTemperature, dragging, overlay, awaiting, lost, lostReasonLabel, className, ...rest },
+  { lead, onTemperature, dragging, overlay, awaiting, lost, lostReasonLabel, unread, className, ...rest },
   ref,
 ) {
   return (
@@ -41,7 +44,17 @@ export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function
       {...rest}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="text-sm font-medium leading-tight text-foreground">{lead.name}</p>
+        <p className="flex items-center gap-1.5 text-sm font-medium leading-tight text-foreground">
+          {!!unread && unread > 0 && (
+            <span
+              className="grid min-w-[18px] shrink-0 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground"
+              aria-label={`${unread} não lida(s)`}
+            >
+              {unread > 9 ? '9+' : unread}
+            </span>
+          )}
+          <span className="truncate">{lead.name}</span>
+        </p>
         {onTemperature ? (
           <TemperatureControl
             value={lead.temperature}
@@ -99,6 +112,7 @@ export function LeadCard({
   });
   const style = transform ? { transform: CSS.Translate.toString(transform) } : undefined;
   const down = React.useRef<{ x: number; y: number } | null>(null);
+  const { unread } = useUnread();
 
   return (
     <LeadCardView
@@ -108,6 +122,7 @@ export function LeadCard({
       awaiting={awaiting}
       lost={lost}
       lostReasonLabel={lostReasonLabel}
+      unread={unread[lead.id] ?? 0}
       dragging={isDragging}
       style={style}
       {...attributes}
