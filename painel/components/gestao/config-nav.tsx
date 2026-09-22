@@ -9,6 +9,7 @@ const TABS = [
   { href: '/configuracoes/motivos', label: 'Motivos de perda' },
   { href: '/configuracoes/campanhas', label: 'Campanhas' },
   { href: '/configuracoes/respostas', label: 'Respostas rápidas' },
+  { href: '/configuracoes/importar', label: 'Importar base' },
   { href: '/configuracoes/usuarios', label: 'Usuários' },
   { href: '/configuracoes/relatorio', label: 'Relatório' },
 ];

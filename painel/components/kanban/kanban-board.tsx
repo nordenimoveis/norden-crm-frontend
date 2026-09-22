@@ -21,11 +21,14 @@ import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { useSession } from '@/components/session-provider';
 import { isManager } from '@/lib/types';
 import { firstName } from '@/lib/utils';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { KanbanFilters } from './kanban-filters';
 import { KanbanColumn } from './kanban-column';
 import { LeadCardView } from './lead-card';
 import { LossReasonDialog } from './loss-reason-dialog';
+import { NewLeadDialog } from './new-lead-dialog';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
 
 function groupByStage(leads: LeadSummary[], stages: PipelineStage[]): Record<string, LeadSummary[]> {
@@ -87,6 +90,7 @@ export function KanbanBoard() {
   const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }));
   const [activeLead, setActiveLead] = useState<LeadSummary | null>(null);
   const [pendingLost, setPendingLost] = useState<LeadSummary | null>(null);
+  const [newLeadOpen, setNewLeadOpen] = useState(false);
 
   function onDragStart(e: DragStartEvent) {
     setActiveLead(leadById.get(String(e.active.id)) ?? null);
@@ -129,18 +133,23 @@ export function KanbanBoard() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-6">
-      <header className="mb-4">
-        <div className="flex items-baseline gap-3">
-          <h1 className="font-display text-2xl font-medium tracking-tight">
-            Olá, {firstName(user.name)}
-          </h1>
-          {leadsQuery.isFetching && !loading && (
-            <span className="text-xs text-muted-foreground">atualizando…</span>
-          )}
+      <header className="mb-4 flex items-start justify-between gap-3">
+        <div>
+          <div className="flex items-baseline gap-3">
+            <h1 className="font-display text-2xl font-medium tracking-tight">
+              Olá, {firstName(user.name)}
+            </h1>
+            {leadsQuery.isFetching && !loading && (
+              <span className="text-xs text-muted-foreground">atualizando…</span>
+            )}
+          </div>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {leads.length} {leads.length === 1 ? 'lead' : 'leads'} no quadro
+          </p>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {leads.length} {leads.length === 1 ? 'lead' : 'leads'} no quadro
-        </p>
+        <Button type="button" onClick={() => setNewLeadOpen(true)} className="shrink-0">
+          <Plus className="size-4" /> <span className="hidden sm:inline">Novo lead</span>
+        </Button>
       </header>
 
       <div className="mb-4">
@@ -203,6 +212,8 @@ export function KanbanBoard() {
         onConfirm={confirmLost}
         onCancel={() => setPendingLost(null)}
       />
+
+      <NewLeadDialog open={newLeadOpen} onOpenChange={setNewLeadOpen} isManager={manager} />
 
       <LeadPanel leadId={openLeadId} onClose={closeLead} />
     </div>

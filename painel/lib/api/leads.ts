@@ -66,3 +66,45 @@ export function transferLead(id: string, brokerId: string): Promise<LeadSummary>
 export function acceptAiTemperature(id: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/accept-ai-temperature`, { method: 'POST' });
 }
+
+/** Campos do cadastro manual de um lead (POST /leads). */
+export interface NewLead {
+  name: string;
+  phone?: string;
+  email?: string;
+  interest?: string;
+  notes?: string;
+  /** Só gestores; sem isso o lead entra pela roleta. */
+  brokerId?: string;
+  /** Inicia a régua de boas-vindas (por padrão, não). */
+  startCadence?: boolean;
+}
+
+export function createLead(input: NewLead): Promise<{ lead: LeadSummary; duplicate: boolean }> {
+  return apiFetch(`leads`, { method: 'POST', body: JSON.stringify(input) });
+}
+
+/** Uma linha da importação em massa da base antiga. */
+export interface ImportRow {
+  name: string;
+  phone?: string;
+  email?: string;
+  interest?: string;
+  notes?: string;
+}
+
+/** Resumo devolvido por POST /leads/import. */
+export interface ImportResult {
+  total: number;
+  created: number;
+  duplicate: number;
+  errors: { row: number; name: string; message: string }[];
+}
+
+/** Importa a base antiga em massa (grava como "Base Antiga", sem roleta/cadência). */
+export function importLeads(rows: ImportRow[]): Promise<ImportResult> {
+  return apiFetch<ImportResult>(`leads/import`, {
+    method: 'POST',
+    body: JSON.stringify({ rows }),
+  });
+}

@@ -13,7 +13,9 @@ export default async function ConfigLayout({ children }: { children: React.React
     <div className="mx-auto w-full max-w-3xl px-4 py-6 sm:px-6">
       <div className="mb-6">
         <h1 className="font-display text-2xl font-medium tracking-tight">Configurações</h1>
-        <p className="mt-1 text-sm text-muted-foreground">Funil de vendas e motivos de perda.</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Funil, campanhas, importação da base, usuários e relatórios.
+        </p>
       </div>
       <ConfigNav />
       <div className="mt-6">{children}</div>
