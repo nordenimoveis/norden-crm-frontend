@@ -244,3 +244,23 @@ export interface LeadTemplate {
   name: string;
   preview: string;
 }
+
+export type TaskStatus = 'PENDENTE' | 'FEITA' | 'SEM_RESPOSTA' | 'CANCELADA';
+
+/** Tarefa do corretor (hoje: ligação sugerida pela régua quando o cliente não responde). */
+export interface LeadTask {
+  id: string;
+  leadId: string;
+  leadName: string;
+  leadPhone: string | null;
+  leadInterest: string | null;
+  brokerId: string | null;
+  brokerName: string | null;
+  type: string;
+  status: TaskStatus;
+  title: string;
+  dueAt: string;
+  note: string | null;
+  doneAt: string | null;
+  createdAt: string;
+}

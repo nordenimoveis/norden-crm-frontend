@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, BellRing, LayoutGrid, LogOut, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Bell, BellRing, LayoutGrid, ListChecks, LogOut, Settings, Volume2, VolumeX } from 'lucide-react';
 import { NordenMark } from '@/components/norden-mark';
 import { Button } from '@/components/ui/button';
+import { useTasks } from '@/hooks/use-tasks';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,6 +66,31 @@ function NotificationsBell() {
   );
 }
 
+/** Atalho para a lista de tarefas, com contador de pendentes. */
+function TasksButton() {
+  const { data: tasks = [] } = useTasks();
+  const count = tasks.length;
+  return (
+    <Button
+      asChild
+      variant="ghost"
+      size="icon"
+      className="relative"
+      title={count ? `${count} tarefa(s) pendente(s)` : 'Tarefas'}
+      aria-label={count ? `${count} tarefas pendentes` : 'Tarefas'}
+    >
+      <Link href="/tarefas">
+        <ListChecks className={count ? 'text-accent' : undefined} />
+        {count > 0 && (
+          <span className="absolute -right-0.5 -top-0.5 grid min-w-[18px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
+            {count > 99 ? '99+' : count}
+          </span>
+        )}
+      </Link>
+    </Button>
+  );
+}
+
 /** Barra superior do painel: marca, identidade do usuário e sair. */
 export function AppTopbar() {
   const user = useSession();
@@ -78,6 +104,7 @@ export function AppTopbar() {
         </Link>
 
         <div className="flex items-center gap-3">
+          <TasksButton />
           <NotificationsBell />
           {manager && (
             <DropdownMenu>

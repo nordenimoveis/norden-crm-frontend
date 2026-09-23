@@ -177,6 +177,11 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       }
     });
 
+    // Tarefas (ligações da régua): atualiza a lista e o contador do topo ao vivo.
+    for (const type of ['task.created', 'task.updated']) {
+      es.addEventListener(type, () => qc.invalidateQueries({ queryKey: ['tasks'] }));
+    }
+
     es.addEventListener('ai.suggestion', (e) => {
       const d = parse(e as MessageEvent);
       if (typeof d.leadId === 'string') {
