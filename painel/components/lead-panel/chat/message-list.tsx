@@ -15,27 +15,36 @@ function Bubble({ m }: { m: ChatMessage }) {
       </div>
     );
   }
+
+  // Nota interna: cartão central discreto (não é balão de conversa).
+  if (m.private) {
+    return (
+      <div className="flex justify-center py-1">
+        <div className="max-w-[86%] rounded-xl border border-dashed border-accent/40 bg-accent/[0.07] px-4 py-2.5 text-center">
+          <p className="mb-1 flex items-center justify-center gap-1 text-[0.66rem] font-semibold uppercase tracking-wide text-accent">
+            <Lock className="size-3" /> Nota interna
+          </p>
+          {m.senderName && <p className="text-xs font-medium text-foreground">{m.senderName}</p>}
+          <p className="mt-0.5 whitespace-pre-wrap break-words text-sm leading-relaxed text-muted-foreground">{m.text}</p>
+          <p className="mt-1 text-[0.66rem] text-muted-foreground/70">{formatDateTime(m.at)}</p>
+        </div>
+      </div>
+    );
+  }
+
   const out = m.direction === 'out';
-  const note = m.private;
   return (
     <div className={cn('flex', out ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[80%] rounded-2xl px-3 py-2 text-sm shadow-card',
-          note
-            ? 'border border-dashed border-accent/40 bg-accent/[0.08] text-foreground'
-            : out
-              ? 'bg-primary text-primary-foreground'
-              : 'border border-border bg-card text-foreground',
+          'relative max-w-[70%] rounded-2xl px-3.5 py-2.5 text-sm shadow-card after:absolute after:bottom-0 after:size-3',
+          out
+            ? 'rounded-br-md border border-sent-border bg-sent text-sent-foreground after:-right-1.5 after:bg-sent after:[clip-path:polygon(0_0,100%_100%,0_100%)]'
+            : 'rounded-bl-md border border-border bg-card text-foreground after:-left-1.5 after:bg-card after:[clip-path:polygon(100%_0,100%_100%,0_100%)]',
         )}
       >
-        {note && (
-          <p className="mb-1 flex items-center gap-1 text-[0.7rem] font-medium uppercase tracking-wide text-accent">
-            <Lock className="size-3" /> Nota interna
-          </p>
-        )}
         <p className="whitespace-pre-wrap break-words">{m.text}</p>
-        <p className={cn('mt-1 text-[0.7rem]', out && !note ? 'text-primary-foreground/60' : 'text-muted-foreground')}>
+        <p className={cn('mt-1 text-[0.68rem]', out ? 'text-sent-foreground/60' : 'text-muted-foreground')}>
           {m.senderName ? `${m.senderName} · ` : ''}
           {formatDateTime(m.at)}
         </p>

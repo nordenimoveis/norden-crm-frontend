@@ -64,6 +64,12 @@ const config: Config = {
           quente: 'hsl(var(--temp-quente))',
           neutro: 'hsl(var(--temp-neutro))',
         },
+        // Balão de mensagem enviada (Norden) — dourado claro da marca.
+        sent: {
+          DEFAULT: 'hsl(var(--sent))',
+          foreground: 'hsl(var(--sent-foreground))',
+          border: 'hsl(var(--sent-border))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',

@@ -31,7 +31,7 @@ import {
   type LeadSummary,
   type Temperature,
 } from '@/lib/types';
-import { cn, formatDate, formatDateTime } from '@/lib/utils';
+import { cn, formatDate, formatDateTime, initials } from '@/lib/utils';
 
 const CAD_STATUS: Record<string, string> = {
   PENDENTE: 'Agendado',
@@ -117,48 +117,37 @@ function PanelBody({ leadId }: { leadId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Cabeçalho */}
-      <div className="border-b border-border p-4 pr-12 sm:p-5 sm:pr-12">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <h2 className="truncate font-display text-xl font-medium tracking-tight">{lead.name}</h2>
-            <p className="mt-0.5 text-sm text-muted-foreground">
+      {/* Cabeçalho compacto (uma linha; enrola no celular) */}
+      <div className="border-b border-border px-3 py-2.5 pr-11 sm:px-4">
+        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
+          {/* Avatar com as iniciais do contato */}
+          <div
+            className="grid size-10 shrink-0 place-items-center rounded-full bg-gradient-to-br from-accent/85 to-accent text-sm font-semibold text-accent-foreground"
+            aria-hidden
+          >
+            {initials(lead.name)}
+          </div>
+
+          <div className="min-w-0 flex-1">
+            <h2 className="truncate font-display text-base font-medium leading-tight tracking-tight">{lead.name}</h2>
+            <p className="truncate text-xs text-muted-foreground">
               {SOURCE_LABELS[lead.source]}
               {lead.brokerName ? ` · ${lead.brokerName}` : ''}
             </p>
           </div>
-          <div className="flex items-center gap-1">
-            <TemperatureControl
-              value={lead.temperature}
-              suggested={lead.aiSuggestedTemperature}
-              onChange={(t: Temperature) => patch.mutate({ temperature: t })}
-            />
-            {/* Recolher/expandir a coluna de detalhes (só no desktop, onde há 2 colunas). */}
-            <button
-              type="button"
-              onClick={() => setContextOpen((v) => !v)}
-              className="hidden size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:grid"
-              title={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
-              aria-label={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
-            >
-              {contextOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
-            </button>
-          </div>
-        </div>
 
-        {/* Seletor de etapa */}
-        <div className="mt-3">
+          {/* Etapa (pill dropdown) */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button
                 type="button"
-                className="inline-flex items-center gap-1.5 rounded-full border border-border bg-secondary px-3 py-1 text-sm font-medium text-secondary-foreground transition-colors hover:bg-muted"
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted"
               >
                 {stage?.label ?? lead.stage}
-                <ChevronDown className="size-3.5 text-muted-foreground" />
+                <ChevronDown className="size-3 text-muted-foreground" />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+            <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
               <DropdownMenuLabel>Mover para etapa</DropdownMenuLabel>
               <DropdownMenuRadioGroup value={lead.stage} onValueChange={changeStage}>
                 {stages.map((s) => (
@@ -169,6 +158,23 @@ function PanelBody({ leadId }: { leadId: string }) {
               </DropdownMenuRadioGroup>
             </DropdownMenuContent>
           </DropdownMenu>
+
+          <TemperatureControl
+            value={lead.temperature}
+            suggested={lead.aiSuggestedTemperature}
+            onChange={(t: Temperature) => patch.mutate({ temperature: t })}
+          />
+
+          {/* Recolher/expandir a coluna de detalhes (só no desktop). */}
+          <button
+            type="button"
+            onClick={() => setContextOpen((v) => !v)}
+            className="hidden size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:grid"
+            title={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
+            aria-label={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
+          >
+            {contextOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
+          </button>
         </div>
 
         {isLost && (

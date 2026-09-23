@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Send, Sparkles } from 'lucide-react';
+import { Clock, Mail, Send, Sparkles, StickyNote, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSendActions } from '@/hooks/use-messages';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
@@ -76,47 +76,11 @@ export function Composer({
 
   return (
     <div className="border-t border-border p-3">
-      {/* Alternador mensagem/nota */}
-      <div className="mb-2 flex items-center gap-2">
-        <div className="inline-flex rounded-md border border-border p-0.5 text-xs">
-          <button
-            type="button"
-            onClick={() => setMode('msg')}
-            className={cn('rounded px-2 py-1 font-medium', mode === 'msg' ? 'bg-secondary text-foreground' : 'text-muted-foreground')}
-          >
-            Mensagem
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode('note')}
-            className={cn('rounded px-2 py-1 font-medium', mode === 'note' ? 'bg-secondary text-foreground' : 'text-muted-foreground')}
-          >
-            Nota interna
-          </button>
-        </div>
-        {mode === 'msg' && draft && canSendFreeText && (
-          <button
-            type="button"
-            onClick={() => {
-              setValue(draft);
-              onUsedDraft?.();
-            }}
-            className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/[0.08] px-2 py-0.5 text-xs text-accent"
-          >
-            <Sparkles className="size-3" /> Usar rascunho da IA
-          </button>
-        )}
-      </div>
-
-      {/* Aviso de janela de 24h */}
+      {/* Aviso fino: fora da janela de 24h */}
       {disabled && (
-        <div className="mb-2 rounded-md border border-border bg-muted/50 p-2.5 text-xs text-muted-foreground">
-          Fora da janela de 24h do WhatsApp — texto livre bloqueado. Envie um template aprovado ou registre uma nota interna.
-          <div className="mt-2">
-            <Button size="sm" variant="accent" onClick={() => setTemplateOpen(true)}>
-              Escolher template
-            </Button>
-          </div>
+        <div className="mb-2.5 flex items-center gap-2 rounded-lg border border-destructive/25 bg-destructive/[0.07] px-3 py-1.5 text-xs font-medium text-destructive">
+          <Clock className="size-3.5 shrink-0" />
+          Tempo de resposta de 24h esgotado. Use um template.
         </div>
       )}
 
@@ -141,7 +105,19 @@ export function Composer({
 
       {error && <p className="mb-2 text-xs text-destructive">{error}</p>}
 
+      {/* Campo: atalho de template + texto + enviar */}
       <div className="flex items-end gap-2">
+        {mode === 'msg' && (
+          <button
+            type="button"
+            onClick={() => setTemplateOpen(true)}
+            title="Escolher template aprovado"
+            className="inline-flex h-[52px] shrink-0 items-center gap-1.5 rounded-xl border border-accent/35 bg-accent/[0.08] px-3 text-xs font-semibold text-accent transition-colors hover:bg-accent/[0.16]"
+          >
+            <Zap className="size-4" />
+            <span className="hidden sm:inline">templates</span>
+          </button>
+        )}
         <textarea
           ref={taRef}
           value={value}
@@ -158,7 +134,7 @@ export function Composer({
             noteMode ? 'Nota interna (o cliente não vê)…' : disabled ? 'Envie um template…' : 'Escreva uma mensagem…  (/ para respostas rápidas)'
           }
           className={cn(
-            'max-h-[200px] min-h-[52px] flex-1 resize-none rounded-xl border bg-card px-3.5 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+            'max-h-[200px] min-h-[52px] flex-1 resize-none rounded-xl border bg-card px-3.5 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60',
             noteMode ? 'border-accent/40 bg-accent/[0.05]' : 'border-input',
           )}
         />
@@ -174,14 +150,51 @@ export function Composer({
         </Button>
       </div>
 
-      {/* Dica de teclado + janela de 24h, discreta */}
-      {!disabled && (
-        <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
-          <span className="font-medium text-foreground/70">Enter</span> envia ·{' '}
-          <span className="font-medium text-foreground/70">Shift+Enter</span> quebra linha
-          {!noteMode && windowExpiresAt ? ` · janela aberta até ${formatDateTime(windowExpiresAt)}` : ''}
-        </p>
-      )}
+      {/* Modo (Mensagem / Nota interna) + rascunho da IA + dica */}
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <div className="inline-flex rounded-lg border border-border bg-muted/40 p-0.5 text-xs">
+          <button
+            type="button"
+            onClick={() => setMode('msg')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
+              mode === 'msg' ? 'bg-card text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Mail className="size-3.5" /> Mensagem
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('note')}
+            className={cn(
+              'inline-flex items-center gap-1.5 rounded-md px-2.5 py-1 font-medium transition-colors',
+              mode === 'note' ? 'bg-card text-foreground shadow-card' : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <StickyNote className="size-3.5" /> Nota interna
+          </button>
+        </div>
+
+        {mode === 'msg' && draft && canSendFreeText && (
+          <button
+            type="button"
+            onClick={() => {
+              setValue(draft);
+              onUsedDraft?.();
+            }}
+            className="inline-flex items-center gap-1 rounded-full border border-accent/40 bg-accent/[0.08] px-2.5 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/[0.14]"
+          >
+            <Sparkles className="size-3" /> Usar rascunho da IA
+          </button>
+        )}
+
+        {!disabled && (
+          <p className="ml-auto hidden text-[0.68rem] text-muted-foreground sm:block">
+            <span className="font-medium text-foreground/70">Enter</span> envia
+            {!noteMode && windowExpiresAt ? ` · janela até ${formatDateTime(windowExpiresAt)}` : ''}
+          </p>
+        )}
+      </div>
 
       <TemplatePicker
         leadId={leadId}

@@ -50,6 +50,11 @@
     --temp-frio: 205 42% 48%;
     --temp-morno: 34 68% 50%;
     --temp-quente: 8 66% 50%;
+
+    /* Balão de mensagem enviada (Norden) — dourado claro da marca */
+    --sent: 40 88% 92%;
+    --sent-foreground: 200 16% 15%;
+    --sent-border: 38 55% 80%;
   }
 
   :root:not([data-theme='light']) {
@@ -91,6 +96,10 @@
     --temp-frio: 205 48% 60%;
     --temp-morno: 34 70% 58%;
     --temp-quente: 8 68% 60%;
+
+    --sent: 36 30% 22%;
+    --sent-foreground: 40 24% 92%;
+    --sent-border: 36 26% 32%;
   }
 
   @media (prefers-color-scheme: dark) {
@@ -118,6 +127,9 @@
       --temp-frio: 205 48% 60%;
       --temp-morno: 34 70% 58%;
       --temp-quente: 8 68% 60%;
+      --sent: 36 30% 22%;
+      --sent-foreground: 40 24% 92%;
+      --sent-border: 36 26% 32%;
     }
   }
 
