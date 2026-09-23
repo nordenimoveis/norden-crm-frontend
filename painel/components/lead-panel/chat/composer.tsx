@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSendActions } from '@/hooks/use-messages';
@@ -31,6 +31,15 @@ export function Composer({
   const [error, setError] = useState<string | null>(null);
   const [templateOpen, setTemplateOpen] = useState(false);
   const { text, note, template } = useSendActions(leadId);
+  const taRef = useRef<HTMLTextAreaElement>(null);
+
+  // Campo que cresce sozinho conforme o texto (1 → ~8 linhas), depois rola.
+  useEffect(() => {
+    const el = taRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 200)}px`;
+  }, [value]);
 
   // Menu de respostas rápidas: aparece ao digitar "/" no início (modo mensagem).
   const slash = mode === 'msg' && value.startsWith('/');
@@ -111,10 +120,6 @@ export function Composer({
         </div>
       )}
 
-      {!disabled && windowExpiresAt && mode === 'msg' && (
-        <p className="mb-1 text-[0.7rem] text-muted-foreground">Janela aberta até {formatDateTime(windowExpiresAt)}</p>
-      )}
-
       {/* Menu de respostas rápidas */}
       {slash && matches.length > 0 && (
         <div className="mb-2 max-h-40 overflow-y-auto rounded-md border border-border bg-popover shadow-panel">
@@ -138,6 +143,7 @@ export function Composer({
 
       <div className="flex items-end gap-2">
         <textarea
+          ref={taRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={(e) => {
@@ -147,16 +153,35 @@ export function Composer({
             }
           }}
           disabled={disabled}
-          rows={2}
+          rows={1}
           placeholder={
             noteMode ? 'Nota interna (o cliente não vê)…' : disabled ? 'Envie um template…' : 'Escreva uma mensagem…  (/ para respostas rápidas)'
           }
-          className="flex-1 resize-none rounded-md border border-input bg-card px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50"
+          className={cn(
+            'max-h-[200px] min-h-[52px] flex-1 resize-none rounded-xl border bg-card px-3.5 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-50',
+            noteMode ? 'border-accent/40 bg-accent/[0.05]' : 'border-input',
+          )}
         />
-        <Button size="icon" onClick={submit} disabled={disabled || sending || !value.trim()} title="Enviar" aria-label="Enviar">
-          <Send className="size-4" />
+        <Button
+          size="icon"
+          onClick={submit}
+          disabled={disabled || sending || !value.trim()}
+          title="Enviar"
+          aria-label="Enviar"
+          className="size-11 shrink-0 rounded-xl"
+        >
+          <Send className="size-[18px]" />
         </Button>
       </div>
+
+      {/* Dica de teclado + janela de 24h, discreta */}
+      {!disabled && (
+        <p className="mt-1.5 text-[0.7rem] text-muted-foreground">
+          <span className="font-medium text-foreground/70">Enter</span> envia ·{' '}
+          <span className="font-medium text-foreground/70">Shift+Enter</span> quebra linha
+          {!noteMode && windowExpiresAt ? ` · janela aberta até ${formatDateTime(windowExpiresAt)}` : ''}
+        </p>
+      )}
 
       <TemplatePicker
         leadId={leadId}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Ban, Check, ChevronDown, Sparkles } from 'lucide-react';
+import { ArrowRightLeft, Ban, Check, ChevronDown, PanelRightClose, PanelRightOpen, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +31,7 @@ import {
   type LeadSummary,
   type Temperature,
 } from '@/lib/types';
-import { formatDate, formatDateTime } from '@/lib/utils';
+import { cn, formatDate, formatDateTime } from '@/lib/utils';
 
 const CAD_STATUS: Record<string, string> = {
   PENDENTE: 'Agendado',
@@ -67,7 +67,7 @@ const EVENT_LABEL: Record<string, string> = {
 export function LeadPanel({ leadId, onClose }: { leadId: string | null; onClose: () => void }) {
   return (
     <Sheet open={Boolean(leadId)} onOpenChange={(o) => !o && onClose()}>
-      <SheetContent title="Detalhes do lead" className="p-0">
+      <SheetContent title="Detalhes do lead" size="wide" className="p-0">
         {leadId ? <PanelBody leadId={leadId} /> : null}
       </SheetContent>
     </Sheet>
@@ -83,7 +83,10 @@ function PanelBody({ leadId }: { leadId: string }) {
   const brokersQuery = useBrokers(manager);
   const reasonsQuery = useLossReasons();
   const [lostPending, setLostPending] = useState<LeadSummary | null>(null);
-  const [tab, setTab] = useState<'resumo' | 'conversa'>('resumo');
+  // No celular, alterna entre Conversa e Resumo; no desktop as duas colunas aparecem juntas.
+  const [tab, setTab] = useState<'resumo' | 'conversa'>('conversa');
+  // No desktop, permite recolher a coluna de contexto para a conversa ocupar tudo.
+  const [contextOpen, setContextOpen] = useState(true);
   const { draft, clearDraft } = useDraft(leadId);
   const { markRead } = useUnread();
   // Abrir o lead zera o contador de não lidas dele.
@@ -115,7 +118,7 @@ function PanelBody({ leadId }: { leadId: string }) {
   return (
     <div className="flex h-full flex-col">
       {/* Cabeçalho */}
-      <div className="border-b border-border p-5 pr-12">
+      <div className="border-b border-border p-4 pr-12 sm:p-5 sm:pr-12">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h2 className="truncate font-display text-xl font-medium tracking-tight">{lead.name}</h2>
@@ -124,11 +127,23 @@ function PanelBody({ leadId }: { leadId: string }) {
               {lead.brokerName ? ` · ${lead.brokerName}` : ''}
             </p>
           </div>
-          <TemperatureControl
-            value={lead.temperature}
-            suggested={lead.aiSuggestedTemperature}
-            onChange={(t: Temperature) => patch.mutate({ temperature: t })}
-          />
+          <div className="flex items-center gap-1">
+            <TemperatureControl
+              value={lead.temperature}
+              suggested={lead.aiSuggestedTemperature}
+              onChange={(t: Temperature) => patch.mutate({ temperature: t })}
+            />
+            {/* Recolher/expandir a coluna de detalhes (só no desktop, onde há 2 colunas). */}
+            <button
+              type="button"
+              onClick={() => setContextOpen((v) => !v)}
+              className="hidden size-8 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:grid"
+              title={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
+              aria-label={contextOpen ? 'Ocultar detalhes' : 'Mostrar detalhes'}
+            >
+              {contextOpen ? <PanelRightClose className="size-4" /> : <PanelRightOpen className="size-4" />}
+            </button>
+          </div>
         </div>
 
         {/* Seletor de etapa */}
@@ -165,23 +180,33 @@ function PanelBody({ leadId }: { leadId: string }) {
         )}
       </div>
 
-      {/* Abas */}
-      <div className="flex gap-1 border-b border-border px-5">
-        <TabButton active={tab === 'resumo'} onClick={() => setTab('resumo')}>
-          Resumo
-        </TabButton>
+      {/* Abas — só no celular (no desktop as duas colunas aparecem juntas) */}
+      <div className="flex gap-1 border-b border-border px-4 md:hidden">
         <TabButton active={tab === 'conversa'} onClick={() => setTab('conversa')}>
           Conversa
         </TabButton>
+        <TabButton active={tab === 'resumo'} onClick={() => setTab('resumo')}>
+          Resumo
+        </TabButton>
       </div>
 
-      {tab === 'conversa' ? (
-        <div className="min-h-0 flex-1">
+      {/* Corpo: duas colunas no desktop; uma aba por vez no celular */}
+      <div className="flex min-h-0 flex-1">
+        {/* Conversa */}
+        <div className={cn('min-h-0 min-w-0 flex-1 flex-col', tab === 'conversa' ? 'flex' : 'hidden', 'md:flex')}>
           <ChatView leadId={leadId} draft={draft} onUsedDraft={clearDraft} />
         </div>
-      ) : (
-        <>
-      <div className="flex-1 space-y-6 overflow-y-auto p-5">
+
+        {/* Contexto do lead (recolhível no desktop) */}
+        <aside
+          className={cn(
+            'min-h-0 flex-1 flex-col',
+            tab === 'resumo' ? 'flex' : 'hidden',
+            contextOpen ? 'md:flex' : 'md:hidden',
+            'md:w-[350px] md:flex-none md:shrink-0 md:border-l md:border-border',
+          )}
+        >
+          <div className="min-h-0 flex-1 space-y-6 overflow-y-auto p-5">
         {/* Sugestão da IA */}
         <Section title="Sugestão da IA" icon={<Sparkles className="size-4 text-accent" />}>
           {lead.aiSummary || lead.aiSuggestedTemperature ? (
@@ -274,43 +299,45 @@ function PanelBody({ leadId }: { leadId: string }) {
             </ol>
           )}
         </Section>
-      </div>
+          </div>
 
-      {/* Ações */}
-      <div className="flex flex-wrap items-center gap-2 border-t border-border p-4">
-        {manager && (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <ArrowRightLeft className="size-4" /> Transferir
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
-              <DropdownMenuLabel>Transferir para</DropdownMenuLabel>
-              {(brokersQuery.data ?? [])
-                .filter((b) => b.id !== lead.brokerId)
-                .map((b) => (
-                  <DropdownMenuItem key={b.id} onSelect={() => transfer.mutate(b.id)}>
-                    {b.name}
-                  </DropdownMenuItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        )}
+          {/* Ações — barra clean no rodapé do contexto */}
+          <div className="flex items-center gap-1 border-t border-border p-3">
+            {manager && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button
+                    type="button"
+                    className="inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                  >
+                    <ArrowRightLeft className="size-4" /> Transferir
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="max-h-72 overflow-y-auto">
+                  <DropdownMenuLabel>Transferir para</DropdownMenuLabel>
+                  {(brokersQuery.data ?? [])
+                    .filter((b) => b.id !== lead.brokerId)
+                    .map((b) => (
+                      <DropdownMenuItem key={b.id} onSelect={() => transfer.mutate(b.id)}>
+                        {b.name}
+                      </DropdownMenuItem>
+                    ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
 
-        {!isLost && (
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-auto text-muted-foreground hover:text-destructive"
-            onClick={() => setLostPending(lead)}
-          >
-            <Ban className="size-4" /> Marcar perdido
-          </Button>
-        )}
+            {!isLost && (
+              <button
+                type="button"
+                onClick={() => setLostPending(lead)}
+                className="ml-auto inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+              >
+                <Ban className="size-4" /> Marcar perdido
+              </button>
+            )}
+          </div>
+        </aside>
       </div>
-        </>
-      )}
 
       <LossReasonDialog
         lead={lostPending}

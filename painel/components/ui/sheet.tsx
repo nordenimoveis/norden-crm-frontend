@@ -23,17 +23,27 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = DialogPrimitive.Overlay.displayName;
 
+/** Larguras da gaveta no desktop (no celular sempre ocupa a tela toda). */
+const SHEET_SIZES = {
+  md: 'sm:max-w-md',
+  wide: 'sm:max-w-[900px] xl:max-w-[1000px]',
+} as const;
+
 /** Gaveta lateral direita; ocupa a tela inteira no celular. */
 const SheetContent = React.forwardRef<
   React.ElementRef<typeof DialogPrimitive.Content>,
-  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & { title?: string }
->(({ className, children, title = 'Detalhes', ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content> & {
+    title?: string;
+    size?: keyof typeof SHEET_SIZES;
+  }
+>(({ className, children, title = 'Detalhes', size = 'md', ...props }, ref) => (
   <DialogPrimitive.Portal>
     <SheetOverlay />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        'fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border bg-background shadow-panel sm:max-w-md',
+        'fixed inset-y-0 right-0 z-50 flex h-full w-full flex-col border-l border-border bg-background shadow-panel',
+        SHEET_SIZES[size],
         'data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right data-[state=closed]:duration-200 data-[state=open]:duration-300',
         className,
       )}
