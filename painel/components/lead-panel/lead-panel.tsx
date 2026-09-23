@@ -117,8 +117,8 @@ function PanelBody({ leadId }: { leadId: string }) {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Cabeçalho compacto (uma linha; enrola no celular) */}
-      <div className="border-b border-border px-3 py-2.5 pr-11 sm:px-4">
+      {/* Cabeçalho compacto (uma linha; enrola no celular). pr-12 reserva o espaço do X de fechar. */}
+      <div className="border-b border-border py-2.5 pl-3 pr-12 sm:pl-4">
         <div className="flex flex-wrap items-center gap-x-2.5 gap-y-2">
           {/* Avatar com as iniciais do contato */}
           <div
