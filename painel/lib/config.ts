@@ -42,6 +42,7 @@ const ALLOWED_PREFIXES = [
   'users',
   'reports',
   'tasks',
+  'push',
 ];
 
 /** Segmentos sempre bloqueados, mesmo que algum prefixo mude no futuro. */

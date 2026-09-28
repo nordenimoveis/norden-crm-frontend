@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
+import { enablePush } from '@/lib/push';
 
 interface DraftState {
   drafts: Record<string, string>;
@@ -216,7 +217,25 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
 
   const enableNotifications = useCallback(() => {
     if (typeof window === 'undefined' || !('Notification' in window)) return;
-    void Notification.requestPermission().then((p) => setNotifStatus(p as NotifStatus));
+    // Ativa também o Web Push (notificação no celular/desktop mesmo com o CRM
+    // fechado): registra o Service Worker e inscreve o dispositivo na API.
+    // enablePush() já pede a permissão; caímos no requestPermission simples só
+    // se o navegador não suportar push (mantém o aviso dentro do CRM).
+    void enablePush()
+      .then((r) => {
+        if (r === 'unsupported') return Notification.requestPermission();
+        return Notification.permission;
+      })
+      .then((p) => setNotifStatus(p as NotifStatus))
+      .catch(() => setNotifStatus(Notification.permission as NotifStatus));
+  }, []);
+
+  // Se a permissão já foi concedida antes, garante que a inscrição push exista
+  // (ex.: o navegador limpou a assinatura, ou o usuário liberou em outra sessão).
+  useEffect(() => {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
+      void enablePush().catch(() => {});
+    }
   }, []);
 
   const toggleSound = useCallback(() => {

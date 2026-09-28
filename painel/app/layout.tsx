@@ -21,6 +21,16 @@ export const metadata: Metadata = {
   title: 'Norden CRM',
   description: 'Painel de atendimento e gestão de leads da Norden Imóveis.',
   robots: { index: false, follow: false },
+  manifest: '/manifest.webmanifest',
+  applicationName: 'Norden CRM',
+  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'Norden CRM' },
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-192.png', sizes: '192x192', type: 'image/png' },
+    ],
+    apple: '/apple-touch-icon.png',
+  },
 };
 
 export const viewport: Viewport = {

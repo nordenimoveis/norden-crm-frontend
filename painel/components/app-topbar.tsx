@@ -1,10 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { Bell, BellRing, LayoutGrid, ListChecks, LogOut, Settings, Volume2, VolumeX } from 'lucide-react';
+import { useState } from 'react';
+import { Bell, BellRing, LayoutGrid, ListChecks, LogOut, Send, Settings, Volume2, VolumeX } from 'lucide-react';
 import { NordenMark } from '@/components/norden-mark';
 import { Button } from '@/components/ui/button';
 import { useTasks } from '@/hooks/use-tasks';
+import { sendPushTest } from '@/lib/push';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +24,20 @@ import { isManager } from '@/lib/types';
 /** Sino de avisos: contador de não lidas + controles de notificação e som. */
 function NotificationsBell() {
   const { totalUnread, notifStatus, enableNotifications, soundOn, toggleSound } = useUnread();
+  const [testing, setTesting] = useState(false);
   const has = totalUnread > 0;
+
+  async function handleTest() {
+    setTesting(true);
+    try {
+      await sendPushTest();
+    } catch {
+      /* silencioso: o menu não é lugar de erro técnico */
+    } finally {
+      setTesting(false);
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -45,9 +60,14 @@ function NotificationsBell() {
         <DropdownMenuLabel>{has ? `${totalUnread} não lida(s)` : 'Avisos'}</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {notifStatus === 'granted' ? (
-          <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-            Notificações do navegador ativas
-          </DropdownMenuLabel>
+          <>
+            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
+              Notificações ativas neste aparelho
+            </DropdownMenuLabel>
+            <DropdownMenuItem onClick={handleTest} disabled={testing} onSelect={(e) => e.preventDefault()}>
+              <Send className="size-4" /> {testing ? 'Enviando teste…' : 'Enviar notificação de teste'}
+            </DropdownMenuItem>
+          </>
         ) : notifStatus === 'denied' ? (
           <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
             Notificações bloqueadas no navegador
