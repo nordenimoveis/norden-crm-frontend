@@ -44,7 +44,7 @@ export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function
       {...rest}
     >
       <div className="flex items-start justify-between gap-2">
-        <p className="flex items-center gap-1.5 text-sm font-medium leading-tight text-foreground">
+        <p className="flex min-w-0 flex-1 items-center gap-1.5 text-sm font-medium leading-tight text-foreground">
           {!!unread && unread > 0 && (
             <span
               className="grid min-w-[18px] shrink-0 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground"
@@ -55,15 +55,17 @@ export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function
           )}
           <span className="truncate">{lead.name}</span>
         </p>
-        {onTemperature ? (
-          <TemperatureControl
-            value={lead.temperature}
-            suggested={lead.aiSuggestedTemperature}
-            onChange={onTemperature}
-          />
-        ) : (
-          <TemperatureDot value={lead.temperature} />
-        )}
+        <div className="shrink-0">
+          {onTemperature ? (
+            <TemperatureControl
+              value={lead.temperature}
+              suggested={lead.aiSuggestedTemperature}
+              onChange={onTemperature}
+            />
+          ) : (
+            <TemperatureDot value={lead.temperature} />
+          )}
+        </div>
       </div>
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
