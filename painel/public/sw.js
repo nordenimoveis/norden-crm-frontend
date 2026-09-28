@@ -30,6 +30,10 @@ self.addEventListener('push', (event) => {
     tag: payload.tag || 'norden',
     // Notificações novas de leads diferentes não se sobrepõem; a do mesmo lead sim.
     renotify: true,
+    // Não silenciosa + vibração: dá o alerta físico mesmo antes de o usuário
+    // ajustar o som do canal no Android. O som em si segue o canal do sistema.
+    silent: false,
+    vibrate: [200, 100, 200],
     data: { url: payload.url || '/kanban' },
   };
 
