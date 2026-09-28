@@ -1,7 +1,7 @@
 'use client';
 
 import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMessages, sendMessage, sendNote, sendTemplate } from '@/lib/api/messages';
+import { getMessages, sendAttachments, sendMessage, sendNote, sendTemplate } from '@/lib/api/messages';
 import type { MessagesPage } from '@/lib/types';
 
 /** Histórico paginado do chat (página 0 = mais recentes; próximas = mais antigas). */
@@ -27,5 +27,9 @@ export function useSendActions(leadId: string) {
   const text = useMutation({ mutationFn: (c: string) => sendMessage(leadId, c), onSuccess: refresh });
   const note = useMutation({ mutationFn: (c: string) => sendNote(leadId, c), onSuccess: refresh });
   const template = useMutation({ mutationFn: (step: number) => sendTemplate(leadId, step), onSuccess: refresh });
-  return { text, note, template };
+  const attach = useMutation({
+    mutationFn: ({ files, caption }: { files: File[]; caption?: string }) => sendAttachments(leadId, files, caption),
+    onSuccess: refresh,
+  });
+  return { text, note, template, attach };
 }

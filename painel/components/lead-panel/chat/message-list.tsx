@@ -1,11 +1,50 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
-import { Lock } from 'lucide-react';
-import type { ChatMessage } from '@/lib/types';
+import { FileText, Lock } from 'lucide-react';
+import type { ChatAttachment, ChatMessage } from '@/lib/types';
 import { formatDateTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+
+/** Anexos de uma mensagem: imagens em miniatura, demais arquivos como chip para abrir. */
+function Attachments({ items, out }: { items: ChatAttachment[]; out: boolean }) {
+  return (
+    <div className="mt-1.5 flex flex-col gap-1.5">
+      {items.map((a) => {
+        const url = a.url ?? a.thumb ?? undefined;
+        if (!url) return null;
+        if (a.type === 'image') {
+          return (
+            <a key={a.id} href={url} target="_blank" rel="noreferrer" className="block">
+              <img
+                src={a.thumb ?? url}
+                alt="Anexo"
+                loading="lazy"
+                className="max-h-64 w-auto max-w-full rounded-lg border border-border object-cover"
+              />
+            </a>
+          );
+        }
+        return (
+          <a
+            key={a.id}
+            href={url}
+            target="_blank"
+            rel="noreferrer"
+            className={cn(
+              'inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-medium transition-colors',
+              out ? 'border-sent-border bg-sent/60 hover:bg-sent' : 'border-border bg-muted/50 hover:bg-muted',
+            )}
+          >
+            <FileText className="size-4 shrink-0" />
+            <span className="truncate">Abrir arquivo{a.type && a.type !== 'file' ? ` (${a.type})` : ''}</span>
+          </a>
+        );
+      })}
+    </div>
+  );
+}
 
 function Bubble({ m }: { m: ChatMessage }) {
   if (m.direction === 'system') {
@@ -43,7 +82,8 @@ function Bubble({ m }: { m: ChatMessage }) {
             : 'rounded-bl-md border border-border bg-card text-foreground after:-left-1.5 after:bg-card after:[clip-path:polygon(100%_0,100%_100%,0_100%)]',
         )}
       >
-        <p className="whitespace-pre-wrap break-words">{m.text}</p>
+        {m.text && <p className="whitespace-pre-wrap break-words">{m.text}</p>}
+        {m.attachments && m.attachments.length > 0 && <Attachments items={m.attachments} out={out} />}
         <p className={cn('mt-1 text-[0.68rem]', out ? 'text-sent-foreground/60' : 'text-muted-foreground')}>
           {m.senderName ? `${m.senderName} · ` : ''}
           {formatDateTime(m.at)}

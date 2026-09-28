@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Clock, Mail, Send, Sparkles, StickyNote, Zap } from 'lucide-react';
+import { Clock, FileText, Mail, Paperclip, Send, Sparkles, StickyNote, X, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSendActions } from '@/hooks/use-messages';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
@@ -30,8 +30,29 @@ export function Composer({
   const [value, setValue] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [templateOpen, setTemplateOpen] = useState(false);
-  const { text, note, template } = useSendActions(leadId);
+  const [files, setFiles] = useState<File[]>([]);
+  const [dragOver, setDragOver] = useState(false);
+  const { text, note, template, attach } = useSendActions(leadId);
   const taRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const MAX_BYTES = 50 * 1024 * 1024; // 50 MB por arquivo (o WhatsApp ainda limita por tipo)
+
+  function addFiles(list: FileList | File[] | null) {
+    if (!list) return;
+    const incoming = Array.from(list).filter((f) => f.size > 0);
+    const tooBig = incoming.find((f) => f.size > MAX_BYTES);
+    if (tooBig) {
+      setError(`"${tooBig.name}" passa de 50 MB. Comprima ou envie em partes.`);
+      return;
+    }
+    setError(null);
+    setFiles((prev) => [...prev, ...incoming].slice(0, 10));
+  }
+
+  function removeFile(idx: number) {
+    setFiles((prev) => prev.filter((_, i) => i !== idx));
+  }
 
   // Campo que cresce sozinho conforme o texto (1 → ~8 linhas), depois rola.
   useEffect(() => {
@@ -50,9 +71,10 @@ export function Composer({
     [quickReplies, query],
   );
 
-  const sending = text.isPending || note.isPending;
+  const sending = text.isPending || note.isPending || attach.isPending;
   const noteMode = mode === 'note';
   const disabled = !noteMode && !canSendFreeText;
+  const canSend = (value.trim().length > 0 || files.length > 0) && !disabled && !sending;
 
   async function pickQuickReply(id: string) {
     try {
@@ -65,8 +87,24 @@ export function Composer({
 
   function submit() {
     const content = value.trim();
-    if (!content) return;
     setError(null);
+
+    // Anexos (só no modo mensagem): enviam junto com a legenda digitada.
+    if (!noteMode && files.length > 0) {
+      attach.mutate(
+        { files, caption: content || undefined },
+        {
+          onSuccess: () => {
+            setFiles([]);
+            setValue('');
+          },
+          onError: (e) => setError(e instanceof ApiError ? e.message : 'Não foi possível enviar os arquivos'),
+        },
+      );
+      return;
+    }
+
+    if (!content) return;
     const m = noteMode ? note : text;
     m.mutate(content, {
       onSuccess: () => setValue(''),
@@ -74,8 +112,43 @@ export function Composer({
     });
   }
 
+  // Colar print (Ctrl/Cmd+V com imagem na área de transferência).
+  function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
+    if (noteMode || disabled) return;
+    const pasted = Array.from(e.clipboardData.files);
+    if (pasted.length > 0) {
+      e.preventDefault();
+      addFiles(pasted);
+    }
+  }
+
   return (
-    <div className="border-t border-border p-3">
+    <div
+      className="relative border-t border-border p-3"
+      onDragOver={(e) => {
+        if (noteMode || disabled) return;
+        e.preventDefault();
+        setDragOver(true);
+      }}
+      onDragLeave={(e) => {
+        if (e.currentTarget === e.target) setDragOver(false);
+      }}
+      onDrop={(e) => {
+        if (noteMode || disabled) return;
+        e.preventDefault();
+        setDragOver(false);
+        addFiles(e.dataTransfer.files);
+      }}
+    >
+      {/* Arrastar arquivos para cá */}
+      {dragOver && (
+        <div className="pointer-events-none absolute inset-1 z-10 grid place-items-center rounded-xl border-2 border-dashed border-accent bg-accent/[0.08] text-sm font-medium text-accent">
+          <span className="inline-flex items-center gap-2">
+            <Paperclip className="size-4" /> Solte para anexar
+          </span>
+        </div>
+      )}
+
       {/* Aviso: fora da janela de 24h do WhatsApp (nunca abriu, ou expirou) */}
       {disabled && (
         <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-500">
@@ -109,18 +182,81 @@ export function Composer({
 
       {error && <p className="mb-2 text-xs text-destructive">{error}</p>}
 
-      {/* Campo: atalho de template + texto + enviar */}
+      {/* Prévia dos anexos selecionados (miniatura de imagem ou chip de arquivo) */}
+      {files.length > 0 && (
+        <div className="mb-2 flex flex-wrap gap-2">
+          {files.map((f, i) => {
+            const isImg = f.type.startsWith('image/');
+            const preview = isImg ? URL.createObjectURL(f) : null;
+            return (
+              <div
+                key={`${f.name}-${i}`}
+                className="group relative flex items-center gap-2 rounded-lg border border-border bg-card p-1 pr-2 text-xs"
+              >
+                {preview ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={preview}
+                    alt={f.name}
+                    className="size-10 rounded object-cover"
+                    onLoad={() => URL.revokeObjectURL(preview)}
+                  />
+                ) : (
+                  <span className="grid size-10 place-items-center rounded bg-muted">
+                    <FileText className="size-5 text-muted-foreground" />
+                  </span>
+                )}
+                <span className="max-w-[120px] truncate font-medium text-foreground">{f.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeFile(i)}
+                  title="Remover"
+                  aria-label={`Remover ${f.name}`}
+                  className="grid size-5 shrink-0 place-items-center rounded-full bg-foreground/10 text-foreground/70 transition-colors hover:bg-destructive hover:text-destructive-foreground"
+                >
+                  <X className="size-3" />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <input
+        ref={fileRef}
+        type="file"
+        multiple
+        hidden
+        onChange={(e) => {
+          addFiles(e.target.files);
+          e.target.value = ''; // permite reanexar o mesmo arquivo
+        }}
+      />
+
+      {/* Campo: template + anexar + texto + enviar */}
       <div className="flex items-end gap-2">
         {mode === 'msg' && (
-          <button
-            type="button"
-            onClick={() => setTemplateOpen(true)}
-            title="Escolher template aprovado"
-            className="inline-flex h-[52px] shrink-0 items-center gap-1.5 rounded-xl border border-accent/35 bg-accent/[0.08] px-3 text-xs font-semibold text-accent transition-colors hover:bg-accent/[0.16]"
-          >
-            <Zap className="size-4" />
-            <span className="hidden sm:inline">templates</span>
-          </button>
+          <>
+            <button
+              type="button"
+              onClick={() => setTemplateOpen(true)}
+              title="Escolher template aprovado"
+              className="inline-flex h-[52px] shrink-0 items-center gap-1.5 rounded-xl border border-accent/35 bg-accent/[0.08] px-3 text-xs font-semibold text-accent transition-colors hover:bg-accent/[0.16]"
+            >
+              <Zap className="size-4" />
+              <span className="hidden sm:inline">templates</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              disabled={disabled}
+              title="Anexar arquivo (imagem, PDF, planilha…)"
+              aria-label="Anexar arquivo"
+              className="grid size-[52px] shrink-0 place-items-center rounded-xl border border-input bg-card text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+            >
+              <Paperclip className="size-5" />
+            </button>
+          </>
         )}
         <textarea
           ref={taRef}
@@ -132,6 +268,7 @@ export function Composer({
               submit();
             }
           }}
+          onPaste={handlePaste}
           disabled={disabled}
           rows={1}
           placeholder={
@@ -145,7 +282,7 @@ export function Composer({
         <Button
           size="icon"
           onClick={submit}
-          disabled={disabled || sending || !value.trim()}
+          disabled={!canSend}
           title="Enviar"
           aria-label="Enviar"
           className="size-11 shrink-0 rounded-xl"

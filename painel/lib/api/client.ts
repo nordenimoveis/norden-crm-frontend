@@ -20,10 +20,13 @@ export class ApiError extends Error {
  * Em 401, a sessão caiu: mandamos o usuário para o login.
  */
 export async function apiFetch<T = unknown>(path: string, init?: RequestInit): Promise<T> {
+  // FormData (upload de anexos) precisa que o navegador defina o content-type
+  // com o boundary correto — por isso só forçamos JSON quando o corpo é texto.
+  const isForm = typeof FormData !== 'undefined' && init?.body instanceof FormData;
   const res = await fetch(`/api/${path.replace(/^\/+/, '')}`, {
     ...init,
     headers: {
-      ...(init?.body ? { 'content-type': 'application/json' } : {}),
+      ...(init?.body && !isForm ? { 'content-type': 'application/json' } : {}),
       ...init?.headers,
     },
   });

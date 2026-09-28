@@ -17,6 +17,14 @@ export function sendMessage(leadId: string, content: string): Promise<ChatMessag
   });
 }
 
+/** Envia anexos (imagens, PDF, planilha…) com legenda opcional. Só dentro da janela de 24h. */
+export function sendAttachments(leadId: string, files: File[], caption?: string): Promise<ChatMessage> {
+  const form = new FormData();
+  for (const f of files) form.append('attachments[]', f, f.name);
+  if (caption && caption.trim()) form.append('content', caption.trim());
+  return apiFetch<ChatMessage>(`leads/${leadId}/attachments`, { method: 'POST', body: form });
+}
+
 /** Nota interna (o cliente não vê). */
 export function sendNote(leadId: string, content: string): Promise<ChatMessage> {
   return apiFetch<ChatMessage>(`leads/${leadId}/notes`, {
