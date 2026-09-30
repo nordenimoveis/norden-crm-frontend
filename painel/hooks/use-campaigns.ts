@@ -10,6 +10,7 @@ import {
   getCampaignTemplates,
   getCampaigns,
   launchCampaign,
+  syncCampaignTemplates,
   updateCampaignTemplate,
 } from '@/lib/api/campaigns';
 import type { CampaignFilters } from '@/lib/types';
@@ -35,6 +36,7 @@ export function useTemplateMutations() {
     create: useMutation({ mutationFn: (i: { name: string; preview: string; paramSources: string[] }) => createCampaignTemplate(i), onSuccess: invalidate }),
     update: useMutation({ mutationFn: (v: { id: string; patch: Record<string, unknown> }) => updateCampaignTemplate(v.id, v.patch), onSuccess: invalidate }),
     remove: useMutation({ mutationFn: (id: string) => deleteCampaignTemplate(id), onSuccess: invalidate }),
+    sync: useMutation({ mutationFn: () => syncCampaignTemplates(), onSuccess: invalidate }),
   };
 }
 

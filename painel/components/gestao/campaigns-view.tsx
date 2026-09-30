@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Megaphone, Plus, Send, Trash2, Users } from 'lucide-react';
+import { Clock, Megaphone, Plus, RefreshCw, Send, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -122,9 +122,10 @@ export function CampaignsView() {
 
 function TemplatesManager({ onError }: { onError: (m: string | null) => void }) {
   const { data: templates = [], isLoading } = useCampaignTemplates();
-  const { create, update, remove } = useTemplateMutations();
+  const { create, update, remove, sync } = useTemplateMutations();
   const [name, setName] = useState('');
   const [preview, setPreview] = useState('');
+  const [syncMsg, setSyncMsg] = useState<string | null>(null);
 
   function add(e: React.FormEvent) {
     e.preventDefault();
@@ -135,14 +136,31 @@ function TemplatesManager({ onError }: { onError: (m: string | null) => void }) 
     );
   }
 
+  function runSync() {
+    onError(null);
+    setSyncMsg(null);
+    sync.mutate(undefined, {
+      onSuccess: (r) => setSyncMsg(`${r.total} aprovado(s) na Meta · ${r.imported} novo(s), ${r.updated} atualizado(s).`),
+      onError: (er) => onError(msg(er)),
+    });
+  }
+
   return (
     <section className="space-y-3">
-      <div>
-        <h3 className="font-display text-lg font-medium tracking-tight">Templates aprovados</h3>
-        <p className="text-sm text-muted-foreground">
-          O nome deve bater com o template aprovado na Meta. Use variáveis no texto: <code className="text-xs">{'{{lead_first_name}}'}</code>, <code className="text-xs">{'{{broker_first_name}}'}</code>, <code className="text-xs">{'{{lead_interest}}'}</code>.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-display text-lg font-medium tracking-tight">Templates aprovados</h3>
+          <p className="text-sm text-muted-foreground">
+            Sincronize com a Meta para trazer os templates aprovados automaticamente — ou cadastre manualmente. Variáveis: <code className="text-xs">{'{{lead_first_name}}'}</code>, <code className="text-xs">{'{{broker_first_name}}'}</code>, <code className="text-xs">{'{{lead_interest}}'}</code>.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={runSync} disabled={sync.isPending} className="shrink-0">
+          <RefreshCw className={cn('size-4', sync.isPending && 'animate-spin')} />
+          {sync.isPending ? 'Sincronizando…' : 'Sincronizar com a Meta'}
+        </Button>
       </div>
+
+      {syncMsg && <p className="text-xs font-medium text-accent">{syncMsg}</p>}
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>

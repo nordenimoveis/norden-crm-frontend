@@ -15,6 +15,10 @@ export const updateCampaignTemplate = (id: string, patch: Partial<{ name: string
 export const deleteCampaignTemplate = (id: string) =>
   apiFetch<void>(`campaign-templates/${id}`, { method: 'DELETE' });
 
+/** Sincroniza o catálogo com os templates aprovados na Meta. */
+export const syncCampaignTemplates = () =>
+  apiFetch<{ imported: number; updated: number; total: number }>('campaign-templates/sync', { method: 'POST', body: JSON.stringify({}) });
+
 /* Campanhas */
 export const getCampaigns = () => apiFetch<Campaign[]>('campaigns');
 
