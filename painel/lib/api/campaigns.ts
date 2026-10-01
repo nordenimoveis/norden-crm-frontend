@@ -1,7 +1,7 @@
 'use client';
 
 import { apiFetch } from './client';
-import type { Campaign, CampaignFilters, CampaignTemplate } from '@/lib/types';
+import type { Campaign, CampaignFilters, CampaignRecipient, CampaignTemplate } from '@/lib/types';
 
 /* Templates */
 export const getCampaignTemplates = () => apiFetch<CampaignTemplate[]>('campaign-templates');
@@ -23,6 +23,9 @@ export const syncCampaignTemplates = () =>
 export const getCampaigns = () => apiFetch<Campaign[]>('campaigns');
 
 export const getCampaign = (id: string) => apiFetch<Campaign>(`campaigns/${id}`);
+
+export const getCampaignRecipients = (id: string) =>
+  apiFetch<CampaignRecipient[]>(`campaigns/${id}/recipients`);
 
 export const previewAudience = (filters: CampaignFilters) =>
   apiFetch<{ count: number }>('campaigns/preview-audience', { method: 'POST', body: JSON.stringify(filters) });

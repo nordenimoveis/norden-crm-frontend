@@ -1,14 +1,21 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Clock, Megaphone, Plus, RefreshCw, Send, Trash2, Users } from 'lucide-react';
+import { Check, Clock, Megaphone, MessageSquare, Plus, RefreshCw, Send, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useCampaigns, useCampaignMutations, useCampaignTemplates, useTemplateMutations } from '@/hooks/use-campaigns';
+import {
+  useCampaigns,
+  useCampaignMutations,
+  useCampaignRecipients,
+  useCampaignTemplates,
+  useTemplateMutations,
+} from '@/hooks/use-campaigns';
 import { useStages } from '@/hooks/use-pipeline';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { previewAudience } from '@/lib/api/campaigns';
@@ -19,8 +26,10 @@ import {
   TEMPERATURES,
   TEMPERATURE_LABELS,
   type CampaignFilters,
+  type CampaignRecipient,
   type CampaignStatus,
   type CampaignTemplate,
+  type Campaign,
   type Source,
 } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
@@ -40,6 +49,7 @@ function tokensFrom(text: string): string[] {
 export function CampaignsView() {
   const [error, setError] = useState<string | null>(null);
   const [composing, setComposing] = useState(false);
+  const [detail, setDetail] = useState<Campaign | null>(null);
   const campaigns = useCampaigns();
   const { cancel, remove } = useCampaignMutations();
 
@@ -86,6 +96,9 @@ export function CampaignsView() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1.5">
+                      <Button variant="outline" size="sm" onClick={() => setDetail(c)}>
+                        <Users className="size-4" /> Ver leads
+                      </Button>
                       {(c.status === 'ENVIANDO' || c.status === 'AGENDADA') && (
                         <Button variant="ghost" size="sm" onClick={() => cancel.mutate(c.id, { onError: (e) => setError(msg(e)) })}>
                           Cancelar
@@ -114,7 +127,82 @@ export function CampaignsView() {
       <TemplatesManager onError={setError} />
 
       {composing && <CampaignComposer onClose={() => setComposing(false)} onError={setError} />}
+      {detail && <CampaignDetail campaign={detail} onClose={() => setDetail(null)} />}
     </div>
+  );
+}
+
+/* --------------------------- Detalhe da campanha --------------------------- */
+
+const RECIPIENT_STATUS: Record<CampaignRecipient['status'], { label: string; cls: string }> = {
+  PENDENTE: { label: 'Na fila', cls: 'text-muted-foreground' },
+  PROCESSANDO: { label: 'Enviando', cls: 'text-muted-foreground' },
+  ENVIADO: { label: 'Enviado', cls: 'text-foreground' },
+  FALHOU: { label: 'Falhou', cls: 'text-destructive' },
+};
+
+function CampaignDetail({ campaign, onClose }: { campaign: Campaign; onClose: () => void }) {
+  const { data: recipients = [], isLoading } = useCampaignRecipients(campaign.id);
+  const responded = recipients.filter((r) => r.responded).length;
+
+  return (
+    <Dialog open onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Megaphone className="size-4 text-muted-foreground" /> {campaign.name}
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+          <span>{campaign.templateName}</span>
+          <span>{campaign.sent}/{campaign.total} enviados</span>
+          {campaign.failed > 0 && <span className="text-destructive">{campaign.failed} falhas</span>}
+          <span className="text-accent">{responded} responderam</span>
+        </div>
+
+        <div className="max-h-[55vh] overflow-y-auto rounded-lg border border-border">
+          {isLoading ? (
+            <p className="p-4 text-center text-sm text-muted-foreground">Carregando…</p>
+          ) : recipients.length === 0 ? (
+            <p className="p-4 text-center text-sm text-muted-foreground">Sem destinatários.</p>
+          ) : (
+            <ul className="divide-y divide-border">
+              {recipients.map((r) => {
+                const st = RECIPIENT_STATUS[r.status];
+                return (
+                  <li key={r.leadId} className="flex items-center justify-between gap-3 px-3 py-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">{r.leadName}</p>
+                      <p className="truncate text-xs text-muted-foreground">
+                        {r.brokerName ?? 'Sem corretor'}
+                        {r.error ? ` · ${r.error}` : ''}
+                      </p>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-2">
+                      {r.responded ? (
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/15 px-2 py-0.5 text-xs font-medium text-accent">
+                          <Check className="size-3" /> Respondeu
+                        </span>
+                      ) : (
+                        <span className={cn('text-xs font-medium', st.cls)}>{st.label}</span>
+                      )}
+                      <Link
+                        href={`/kanban?lead=${r.leadId}`}
+                        title="Abrir conversa"
+                        className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                      >
+                        <MessageSquare className="size-4" />
+                      </Link>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
 

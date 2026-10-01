@@ -7,6 +7,7 @@ import {
   createCampaignTemplate,
   deleteCampaign,
   deleteCampaignTemplate,
+  getCampaignRecipients,
   getCampaignTemplates,
   getCampaigns,
   launchCampaign,
@@ -17,6 +18,14 @@ import type { CampaignFilters } from '@/lib/types';
 
 export function useCampaignTemplates(enabled = true) {
   return useQuery({ queryKey: ['campaign-templates'], queryFn: getCampaignTemplates, enabled, staleTime: 60_000 });
+}
+
+export function useCampaignRecipients(id: string | null) {
+  return useQuery({
+    queryKey: ['campaign-recipients', id],
+    queryFn: () => getCampaignRecipients(id as string),
+    enabled: Boolean(id),
+  });
 }
 
 export function useCampaigns(enabled = true) {

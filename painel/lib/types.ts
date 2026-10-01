@@ -106,6 +106,17 @@ export interface Campaign {
   pending?: number;
 }
 
+export interface CampaignRecipient {
+  leadId: string;
+  leadName: string;
+  leadPhone: string | null;
+  brokerName: string | null;
+  status: 'PENDENTE' | 'PROCESSANDO' | 'ENVIADO' | 'FALHOU';
+  error: string | null;
+  sentAt: string | null;
+  responded: boolean;
+}
+
 export interface CampaignFilters {
   stages?: string[];
   temperatures?: string[];
