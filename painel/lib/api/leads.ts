@@ -15,8 +15,11 @@ export interface LeadFilters {
   source?: string | null;
   /** Campanha de origem do Meta Ads. */
   campaign?: string | null;
+  /** Etiqueta (ex.: "Proprietário", "Base Antiga"). */
+  tag?: string | null;
   /** Inclui a Base Antiga (fora do Kanban por padrão). */
   includeOld?: boolean;
+  limit?: number;
 }
 
 /** Monta a query string dos filtros de /leads (só o que estiver preenchido). */
@@ -27,7 +30,9 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.brokerId) p.set('brokerId', f.brokerId);
   if (f.source) p.set('source', f.source);
   if (f.campaign) p.set('campaign', f.campaign);
+  if (f.tag) p.set('tag', f.tag);
   if (f.includeOld) p.set('includeOld', 'true');
+  if (f.limit) p.set('limit', String(f.limit));
   const s = p.toString();
   return s ? `?${s}` : '';
 }

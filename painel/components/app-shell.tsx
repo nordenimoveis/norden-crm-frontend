@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3,
   Ban,
+  Contact,
   KanbanSquare,
   LayoutDashboard,
   ListChecks,
@@ -40,6 +41,7 @@ interface NavItem {
 const PRINCIPAL: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, managerOnly: true },
   { href: '/kanban', label: 'Funil de vendas', icon: KanbanSquare },
+  { href: '/leads', label: 'Leads', icon: Contact },
   { href: '/tarefas', label: 'Tarefas', icon: ListChecks, badge: 'tasks' },
 ];
 
