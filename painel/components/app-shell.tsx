@@ -7,6 +7,7 @@ import {
   BarChart3,
   Ban,
   Contact,
+  Inbox,
   KanbanSquare,
   LayoutDashboard,
   ListChecks,
@@ -25,6 +26,7 @@ import { NotificationsBell } from '@/components/notifications-bell';
 import { Button } from '@/components/ui/button';
 import { useSession } from '@/components/session-provider';
 import { useTasks } from '@/hooks/use-tasks';
+import { useInboxCount } from '@/hooks/use-leads';
 import { logout } from '@/lib/api/client';
 import { isManager } from '@/lib/types';
 import { cn, firstName, initials } from '@/lib/utils';
@@ -34,13 +36,14 @@ interface NavItem {
   label: string;
   icon: LucideIcon;
   managerOnly?: boolean;
-  /** 'tasks' = mostra o contador de tarefas pendentes. */
-  badge?: 'tasks';
+  /** 'tasks' = tarefas pendentes; 'inbox' = leads de campanha que responderam. */
+  badge?: 'tasks' | 'inbox';
 }
 
 const PRINCIPAL: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, managerOnly: true },
   { href: '/kanban', label: 'Funil de vendas', icon: KanbanSquare },
+  { href: '/responderam', label: 'Responderam', icon: Inbox, managerOnly: true, badge: 'inbox' },
   { href: '/leads', label: 'Leads', icon: Contact },
   { href: '/tarefas', label: 'Tarefas', icon: ListChecks, badge: 'tasks' },
 ];
@@ -59,15 +62,17 @@ function useNavState() {
   const user = useSession();
   const manager = isManager(user.role);
   const { data: tasks = [] } = useTasks();
+  const { data: inbox } = useInboxCount(manager);
   const visible = (items: NavItem[]) => items.filter((i) => !i.managerOnly || manager);
-  return { user, manager, tasksCount: tasks.length, principal: visible(PRINCIPAL), gestao: visible(GESTAO) };
+  const counts = { tasks: tasks.length, inbox: inbox?.count ?? 0 };
+  return { user, manager, counts, principal: visible(PRINCIPAL), gestao: visible(GESTAO) };
 }
 
-function NavLink({ item, tasksCount, onNavigate }: { item: NavItem; tasksCount: number; onNavigate?: () => void }) {
+function NavLink({ item, counts, onNavigate }: { item: NavItem; counts: { tasks: number; inbox: number }; onNavigate?: () => void }) {
   const pathname = usePathname();
   const active = pathname === item.href || pathname.startsWith(item.href + '/');
   const Icon = item.icon;
-  const count = item.badge === 'tasks' ? tasksCount : 0;
+  const count = item.badge ? counts[item.badge] : 0;
   return (
     <Link
       href={item.href}
@@ -90,7 +95,7 @@ function NavLink({ item, tasksCount, onNavigate }: { item: NavItem; tasksCount: 
 
 /** Conteúdo do menu (usado tanto no desktop fixo quanto na gaveta mobile). */
 function NavBody({ onNavigate }: { onNavigate?: () => void }) {
-  const { user, manager, tasksCount, principal, gestao } = useNavState();
+  const { user, manager, counts, principal, gestao } = useNavState();
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-14 items-center px-4">
@@ -102,7 +107,7 @@ function NavBody({ onNavigate }: { onNavigate?: () => void }) {
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-2">
         <div className="space-y-1">
           {principal.map((i) => (
-            <NavLink key={i.href} item={i} tasksCount={tasksCount} onNavigate={onNavigate} />
+            <NavLink key={i.href} item={i} counts={counts} onNavigate={onNavigate} />
           ))}
         </div>
 
@@ -112,7 +117,7 @@ function NavBody({ onNavigate }: { onNavigate?: () => void }) {
               Gestão
             </p>
             {gestao.map((i) => (
-              <NavLink key={i.href} item={i} tasksCount={tasksCount} onNavigate={onNavigate} />
+              <NavLink key={i.href} item={i} counts={counts} onNavigate={onNavigate} />
             ))}
           </div>
         )}

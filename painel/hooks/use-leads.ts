@@ -1,8 +1,25 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getLeads, patchLead, type LeadFilters, type LeadPatch } from '@/lib/api/leads';
+import { getInboxCount, getLeads, patchLead, promoteLead, type LeadFilters, type LeadPatch } from '@/lib/api/leads';
 import type { LeadSummary } from '@/lib/types';
+
+/** Contador da caixa "Responderam" (atualiza sozinho a cada 30s). */
+export function useInboxCount(enabled = true) {
+  return useQuery({ queryKey: ['inbox-count'], queryFn: getInboxCount, enabled, refetchInterval: 30_000 });
+}
+
+/** "Trazer para o funil": promove o lead e revalida listas + contador. */
+export function usePromoteLead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => promoteLead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['inbox-count'] });
+    },
+  });
+}
 
 /** Lista de leads para o Kanban, reagindo aos filtros. */
 export function useLeads(filters: LeadFilters) {

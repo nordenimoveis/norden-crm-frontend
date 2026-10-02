@@ -8,6 +8,16 @@ export function getLeadCampaigns(): Promise<LeadCampaign[]> {
   return apiFetch<LeadCampaign[]>('lead-campaigns');
 }
 
+/** Contador da caixa "Responderam" (base antiga que respondeu, aguardando triagem). */
+export function getInboxCount(): Promise<{ count: number }> {
+  return apiFetch<{ count: number }>('leads/inbox-count');
+}
+
+/** "Trazer para o funil": tira o lead da Base Antiga e atribui corretor (roleta). */
+export function promoteLead(id: string): Promise<LeadSummary> {
+  return apiFetch<LeadSummary>(`leads/${id}/promote`, { method: 'POST', body: JSON.stringify({}) });
+}
+
 export interface LeadFilters {
   q?: string;
   temperature?: Temperature | null;
@@ -17,6 +27,8 @@ export interface LeadFilters {
   campaign?: string | null;
   /** Etiqueta (ex.: "Proprietário", "Base Antiga"). */
   tag?: string | null;
+  /** Só leads que já responderam. */
+  responded?: boolean;
   /** Inclui a Base Antiga (fora do Kanban por padrão). */
   includeOld?: boolean;
   limit?: number;
@@ -31,6 +43,7 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.source) p.set('source', f.source);
   if (f.campaign) p.set('campaign', f.campaign);
   if (f.tag) p.set('tag', f.tag);
+  if (f.responded) p.set('responded', 'true');
   if (f.includeOld) p.set('includeOld', 'true');
   if (f.limit) p.set('limit', String(f.limit));
   const s = p.toString();
