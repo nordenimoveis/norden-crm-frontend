@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/server/session';
 import { SessionProvider } from '@/components/session-provider';
 import { RealtimeProvider } from '@/components/realtime-provider';
-import { AppTopbar } from '@/components/app-topbar';
+import { AppShell } from '@/components/app-shell';
 
 /**
  * Shell autenticado. Confirma a sessão no servidor (via /auth/me) e injeta o
@@ -15,10 +15,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <SessionProvider user={user}>
       <RealtimeProvider>
-        <div className="flex min-h-dvh flex-col">
-          <AppTopbar />
-          <main className="flex-1">{children}</main>
-        </div>
+        <AppShell>{children}</AppShell>
       </RealtimeProvider>
     </SessionProvider>
   );
