@@ -103,52 +103,54 @@ export function InboxView() {
               <li
                 key={l.id}
                 className={cn(
-                  'flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3 shadow-card transition-colors',
+                  'rounded-xl border bg-card p-3 shadow-card transition-colors',
                   nova ? 'border-l-[3px] border-l-destructive border-border' : 'border-border',
                 )}
               >
-                <button type="button" onClick={() => openLead(l.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
-                  <span className={cn('size-2.5 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
+                {/* Topo: toca para abrir a conversa */}
+                <button type="button" onClick={() => openLead(l.id)} className="flex w-full items-start gap-2.5 text-left">
+                  <span className={cn('mt-1 size-2.5 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
                   <span className="min-w-0 flex-1">
-                    <span className="flex items-center gap-2">
-                      <span className={cn('truncate', nova ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>{l.name}</span>
+                    <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className={cn('min-w-0 truncate', nova ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>{l.name}</span>
                       {nova && (
-                        <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
-                          nova
-                        </span>
+                        <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-[18px] text-destructive-foreground">nova</span>
                       )}
                       <Badge variant="outline">{l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {l.phone ?? '—'}
                       {l.lastInboundAt ? ` · respondeu ${rel(l.lastInboundAt)}` : ''}
-                      {nova ? ' · nova resposta' : ''}
                     </span>
                   </span>
                 </button>
 
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {/* Status = temperatura, editável na hora */}
+                {/* Ações: temperatura (status) à esquerda; conversa + trazer à direita */}
+                <div className="mt-2.5 flex items-center gap-2">
                   <TemperatureControl
                     value={l.temperature}
                     suggested={l.aiSuggestedTemperature}
                     onChange={(t: Temperature) => update.mutate({ id: l.id, patch: { temperature: t } })}
                   />
-                  <Button variant="ghost" size="sm" onClick={() => openLead(l.id)}>
-                    <MessageSquare className="size-4" /> Conversa
-                  </Button>
-                  <Button
-                    size="sm"
-                    disabled={promote.isPending}
-                    onClick={() =>
-                      promote.mutate(l.id, {
-                        onError: (e) => setError(e instanceof ApiError ? e.message : 'Não foi possível trazer para o funil'),
-                      })
-                    }
-                    title="Atribui um corretor (roleta) e move para o funil de vendas"
-                  >
-                    <ArrowRightCircle className="size-4" /> Trazer para o funil
-                  </Button>
+                  <div className="ml-auto flex items-center gap-1.5">
+                    <Button variant="ghost" size="icon" className="size-9" onClick={() => openLead(l.id)} title="Abrir conversa" aria-label="Abrir conversa">
+                      <MessageSquare className="size-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      disabled={promote.isPending}
+                      onClick={() =>
+                        promote.mutate(l.id, {
+                          onError: (e) => setError(e instanceof ApiError ? e.message : 'Não foi possível trazer para o funil'),
+                        })
+                      }
+                      title="Atribui um corretor (roleta) e move para o funil de vendas"
+                    >
+                      <ArrowRightCircle className="size-4" />
+                      <span className="hidden sm:inline">Trazer para o funil</span>
+                      <span className="sm:hidden">Funil</span>
+                    </Button>
+                  </div>
                 </div>
               </li>
             );

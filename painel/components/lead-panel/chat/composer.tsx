@@ -275,7 +275,7 @@ export function Composer({
             noteMode ? 'Nota interna (o cliente não vê)…' : disabled ? 'Envie um template…' : 'Escreva uma mensagem…  (/ para respostas rápidas)'
           }
           className={cn(
-            'max-h-[200px] min-h-[52px] flex-1 resize-none rounded-xl border bg-card px-3.5 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60',
+            'max-h-[200px] min-h-[52px] min-w-0 flex-1 resize-none rounded-xl border bg-card px-3.5 py-3 text-sm leading-relaxed placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60',
             noteMode ? 'border-accent/40 bg-accent/[0.05]' : 'border-input',
           )}
         />
