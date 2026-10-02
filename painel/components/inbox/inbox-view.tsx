@@ -1,29 +1,65 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { ArrowRightCircle, Inbox, MessageSquare } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
-import { useLeads, usePromoteLead } from '@/hooks/use-leads';
-import { SOURCE_LABELS, TEMPERATURE_LABELS, type Source } from '@/lib/types';
+import { TemperatureControl } from '@/components/kanban/temperature-control';
+import { useLeads, useUpdateLead, usePromoteLead } from '@/hooks/use-leads';
+import { useUnread } from '@/components/realtime-provider';
+import { SOURCE_LABELS, type Source, type Temperature } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
 import { ApiError } from '@/lib/api/client';
-import { formatDateTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
+/** Tempo relativo curto (agora, há X min/h/d). */
+function rel(iso?: string | null): string {
+  if (!iso) return '';
+  const diff = Date.now() - Date.parse(iso);
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `há ${h} h`;
+  return `há ${Math.floor(h / 24)} d`;
+}
+
 export function InboxView() {
-  const { data: leads = [], isLoading } = useLeads({ source: 'BASE_ANTIGA', responded: true, limit: 500 });
+  const filters = useMemo(() => ({ source: 'BASE_ANTIGA', responded: true, limit: 500 }), []);
+  const { data: leads = [], isLoading } = useLeads(filters);
+  const update = useUpdateLead(filters);
   const promote = usePromoteLead();
+  const { unread, markRead } = useUnread();
   const [error, setError] = useState<string | null>(null);
+
+  // Ordena: quem tem resposta NOVA (não lida) primeiro; depois pela última
+  // resposta do CLIENTE (não quando você respondeu). Assim o lead só sobe
+  // quando o cliente fala de novo.
+  const sorted = useMemo(() => {
+    const u = (id: string) => unread[id] ?? 0;
+    return [...leads].sort((a, b) => {
+      const diff = (u(b.id) > 0 ? 1 : 0) - (u(a.id) > 0 ? 1 : 0);
+      if (diff !== 0) return diff;
+      return (b.lastInboundAt ? Date.parse(b.lastInboundAt) : 0) - (a.lastInboundAt ? Date.parse(a.lastInboundAt) : 0);
+    });
+  }, [leads, unread]);
+
+  const novas = useMemo(() => leads.filter((l) => (unread[l.id] ?? 0) > 0).length, [leads, unread]);
 
   // Painel do lead via ?lead=
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
   const openLeadId = params.get('lead');
-  const openLead = useCallback((id: string) => router.push(`${pathname}?lead=${id}`, { scroll: false }), [router, pathname]);
+  const openLead = useCallback(
+    (id: string) => {
+      markRead(id); // abrir a conversa marca como lida
+      router.push(`${pathname}?lead=${id}`, { scroll: false });
+    },
+    [router, pathname, markRead],
+  );
   const closeLead = useCallback(() => router.push(pathname, { scroll: false }), [router, pathname]);
 
   return (
@@ -35,12 +71,21 @@ export function InboxView() {
         <div>
           <h1 className="font-display text-2xl font-medium tracking-tight">Responderam</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Leads de campanha (base antiga) que responderam e ainda não estão no funil. Abra a conversa, entenda o cliente e, quando quiser, traga para o funil.
+            Leads de campanha que responderam e ainda não estão no funil. Em <span className="font-medium text-foreground">negrito</span> = resposta nova. Defina a temperatura como status e, quando quiser, traga para o funil.
           </p>
         </div>
       </div>
 
       {error && <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
+
+      <div className="mb-3 flex items-center gap-3 text-sm text-muted-foreground">
+        <span><span className="font-medium text-foreground">{leads.length}</span> na caixa</span>
+        {novas > 0 && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-semibold text-destructive">
+            {novas} com resposta nova
+          </span>
+        )}
+      </div>
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
@@ -50,49 +95,62 @@ export function InboxView() {
         </div>
       ) : (
         <ul className="space-y-2">
-          {leads.map((l) => (
-            <li
-              key={l.id}
-              className="flex flex-wrap items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-card"
-            >
-              <button
-                type="button"
-                onClick={() => openLead(l.id)}
-                className="flex min-w-0 flex-1 items-center gap-3 text-left"
+          {sorted.map((l) => {
+            const nova = (unread[l.id] ?? 0) > 0;
+            return (
+              <li
+                key={l.id}
+                className={cn(
+                  'flex flex-wrap items-center gap-3 rounded-xl border bg-card p-3 shadow-card transition-colors',
+                  nova ? 'border-l-[3px] border-l-destructive border-border' : 'border-border',
+                )}
               >
-                <span className={cn('size-2.5 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
-                <span className="min-w-0 flex-1">
-                  <span className="flex items-center gap-2">
-                    <span className="truncate font-medium text-foreground">{l.name}</span>
-                    <Badge variant="outline">{l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
+                <button type="button" onClick={() => openLead(l.id)} className="flex min-w-0 flex-1 items-center gap-3 text-left">
+                  <span className={cn('size-2.5 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
+                  <span className="min-w-0 flex-1">
+                    <span className="flex items-center gap-2">
+                      <span className={cn('truncate', nova ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>{l.name}</span>
+                      {nova && (
+                        <span className="grid min-w-[18px] shrink-0 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
+                          {(unread[l.id] ?? 0) > 9 ? '9+' : unread[l.id]}
+                        </span>
+                      )}
+                      <Badge variant="outline">{l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
+                    </span>
+                    <span className="mt-0.5 block text-xs text-muted-foreground">
+                      {l.phone ?? '—'}
+                      {l.lastInboundAt ? ` · respondeu ${rel(l.lastInboundAt)}` : ''}
+                      {nova ? ' · nova resposta' : ''}
+                    </span>
                   </span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {l.phone ?? '—'}
-                    {l.lastInboundAt ? ` · respondeu ${formatDateTime(l.lastInboundAt)}` : ''}
-                    {` · ${TEMPERATURE_LABELS[l.temperature]}`}
-                  </span>
-                </span>
-              </button>
+                </button>
 
-              <div className="flex shrink-0 items-center gap-1.5">
-                <Button variant="ghost" size="sm" onClick={() => openLead(l.id)}>
-                  <MessageSquare className="size-4" /> Conversa
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={promote.isPending}
-                  onClick={() =>
-                    promote.mutate(l.id, {
-                      onError: (e) => setError(e instanceof ApiError ? e.message : 'Não foi possível trazer para o funil'),
-                    })
-                  }
-                  title="Atribui um corretor (roleta) e move para o funil de vendas"
-                >
-                  <ArrowRightCircle className="size-4" /> Trazer para o funil
-                </Button>
-              </div>
-            </li>
-          ))}
+                <div className="flex shrink-0 items-center gap-1.5">
+                  {/* Status = temperatura, editável na hora */}
+                  <TemperatureControl
+                    value={l.temperature}
+                    suggested={l.aiSuggestedTemperature}
+                    onChange={(t: Temperature) => update.mutate({ id: l.id, patch: { temperature: t } })}
+                  />
+                  <Button variant="ghost" size="sm" onClick={() => openLead(l.id)}>
+                    <MessageSquare className="size-4" /> Conversa
+                  </Button>
+                  <Button
+                    size="sm"
+                    disabled={promote.isPending}
+                    onClick={() =>
+                      promote.mutate(l.id, {
+                        onError: (e) => setError(e instanceof ApiError ? e.message : 'Não foi possível trazer para o funil'),
+                      })
+                    }
+                    title="Atribui um corretor (roleta) e move para o funil de vendas"
+                  >
+                    <ArrowRightCircle className="size-4" /> Trazer para o funil
+                  </Button>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 
