@@ -166,6 +166,7 @@ export interface LeadSummary {
   notes?: string | null;
   hasConversation?: boolean;
   lastInboundAt?: string | null;
+  lastReadAt?: string | null;
   aiSummary?: string | null;
   aiSuggestedTemperature?: Temperature | null;
   aiUpdatedAt?: string | null;

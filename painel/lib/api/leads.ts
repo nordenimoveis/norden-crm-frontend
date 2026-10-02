@@ -18,6 +18,11 @@ export function promoteLead(id: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/promote`, { method: 'POST', body: JSON.stringify({}) });
 }
 
+/** Marca a conversa como lida (controle persistente de não lido). */
+export function markLeadRead(id: string): Promise<{ ok: boolean }> {
+  return apiFetch<{ ok: boolean }>(`leads/${id}/read`, { method: 'POST', body: JSON.stringify({}) });
+}
+
 export interface LeadFilters {
   q?: string;
   temperature?: Temperature | null;

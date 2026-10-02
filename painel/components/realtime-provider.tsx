@@ -155,6 +155,8 @@ export function RealtimeProvider({ children }: { children: React.ReactNode }) {
       const d = parse(e as MessageEvent);
       const leadId = typeof d.leadId === 'string' ? d.leadId : undefined;
       invalidate(leadId);
+      // Atualiza o contador da caixa "Responderam" ao vivo.
+      if (d.inbound === true) qc.invalidateQueries({ queryKey: ['inbox-count'] });
       // Só avisa quando é o CLIENTE que escreveu e o lead não está aberto na tela.
       if (leadId && d.inbound === true && openLeadId() !== leadId) {
         setUnread((m) => ({ ...m, [leadId]: (m[leadId] ?? 0) + 1 }));

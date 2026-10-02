@@ -7,9 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
 import { TemperatureControl } from '@/components/kanban/temperature-control';
-import { useLeads, useUpdateLead, usePromoteLead } from '@/hooks/use-leads';
-import { useUnread } from '@/components/realtime-provider';
-import { SOURCE_LABELS, type Source, type Temperature } from '@/lib/types';
+import { useLeads, useUpdateLead, usePromoteLead, useMarkRead } from '@/hooks/use-leads';
+import { SOURCE_LABELS, type LeadSummary, type Source, type Temperature } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
 import { ApiError } from '@/lib/api/client';
 import { cn } from '@/lib/utils';
@@ -31,22 +30,25 @@ export function InboxView() {
   const { data: leads = [], isLoading } = useLeads(filters);
   const update = useUpdateLead(filters);
   const promote = usePromoteLead();
-  const { unread, markRead } = useUnread();
+  const markRead = useMarkRead();
   const [error, setError] = useState<string | null>(null);
 
-  // Ordena: quem tem resposta NOVA (não lida) primeiro; depois pela última
-  // resposta do CLIENTE (não quando você respondeu). Assim o lead só sobe
-  // quando o cliente fala de novo.
+  // "Não lido" vem do servidor (persistente): o cliente respondeu depois da
+  // última vez que a conversa foi aberta (ou nunca foi aberta).
+  const isUnread = (l: LeadSummary) =>
+    Boolean(l.lastInboundAt) && (!l.lastReadAt || Date.parse(l.lastInboundAt!) > Date.parse(l.lastReadAt));
+
+  // Ordena: não lidos primeiro; depois pela última resposta do CLIENTE
+  // (responder não sobe o lead — só uma nova resposta do cliente sobe).
   const sorted = useMemo(() => {
-    const u = (id: string) => unread[id] ?? 0;
     return [...leads].sort((a, b) => {
-      const diff = (u(b.id) > 0 ? 1 : 0) - (u(a.id) > 0 ? 1 : 0);
+      const diff = (isUnread(b) ? 1 : 0) - (isUnread(a) ? 1 : 0);
       if (diff !== 0) return diff;
       return (b.lastInboundAt ? Date.parse(b.lastInboundAt) : 0) - (a.lastInboundAt ? Date.parse(a.lastInboundAt) : 0);
     });
-  }, [leads, unread]);
+  }, [leads]);
 
-  const novas = useMemo(() => leads.filter((l) => (unread[l.id] ?? 0) > 0).length, [leads, unread]);
+  const novas = useMemo(() => leads.filter(isUnread).length, [leads]);
 
   // Painel do lead via ?lead=
   const router = useRouter();
@@ -55,7 +57,7 @@ export function InboxView() {
   const openLeadId = params.get('lead');
   const openLead = useCallback(
     (id: string) => {
-      markRead(id); // abrir a conversa marca como lida
+      markRead.mutate(id); // marca como lida no servidor (persistente)
       router.push(`${pathname}?lead=${id}`, { scroll: false });
     },
     [router, pathname, markRead],
@@ -96,7 +98,7 @@ export function InboxView() {
       ) : (
         <ul className="space-y-2">
           {sorted.map((l) => {
-            const nova = (unread[l.id] ?? 0) > 0;
+            const nova = isUnread(l);
             return (
               <li
                 key={l.id}
@@ -111,8 +113,8 @@ export function InboxView() {
                     <span className="flex items-center gap-2">
                       <span className={cn('truncate', nova ? 'font-semibold text-foreground' : 'font-medium text-foreground')}>{l.name}</span>
                       {nova && (
-                        <span className="grid min-w-[18px] shrink-0 place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
-                          {(unread[l.id] ?? 0) > 9 ? '9+' : unread[l.id]}
+                        <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-[18px] text-destructive-foreground">
+                          nova
                         </span>
                       )}
                       <Badge variant="outline">{l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>

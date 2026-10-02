@@ -1,12 +1,24 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getInboxCount, getLeads, patchLead, promoteLead, type LeadFilters, type LeadPatch } from '@/lib/api/leads';
+import { getInboxCount, getLeads, markLeadRead, patchLead, promoteLead, type LeadFilters, type LeadPatch } from '@/lib/api/leads';
 import type { LeadSummary } from '@/lib/types';
 
-/** Contador da caixa "Responderam" (atualiza sozinho a cada 30s). */
+/** Contador da caixa "Responderam" (não lidos; atualiza sozinho a cada 30s). */
 export function useInboxCount(enabled = true) {
   return useQuery({ queryKey: ['inbox-count'], queryFn: getInboxCount, enabled, refetchInterval: 30_000 });
+}
+
+/** Marca a conversa como lida (persistente) e revalida a caixa + contador. */
+export function useMarkRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => markLeadRead(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['inbox-count'] });
+    },
+  });
 }
 
 /** "Trazer para o funil": promove o lead e revalida listas + contador. */
