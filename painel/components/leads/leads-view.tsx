@@ -107,7 +107,7 @@ export function LeadsView() {
         </Select>
 
         {campaigns.length > 0 && (
-          <Select value={campaign} onChange={setCampaign} label="Todas as campanhas">
+          <Select value={campaign} onChange={setCampaign} label="Campanha / origem (todas)">
             {campaigns.map((c) => (
               <option key={c.campaign} value={c.campaign}>{c.campaign} ({c.total})</option>
             ))}

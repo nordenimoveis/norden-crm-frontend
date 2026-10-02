@@ -97,16 +97,16 @@ export function KanbanFilters({
                   'inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm transition-colors',
                   campaign ? 'border-accent/40 bg-accent/[0.08] text-foreground' : 'border-input bg-card text-foreground hover:bg-muted',
                 )}
-                title="Filtrar por campanha do Meta Ads"
+                title="Filtrar por campanha / origem"
               >
                 <Megaphone className="size-4 text-muted-foreground" />
-                <span className="max-w-[12rem] truncate">{campaign ?? 'Todas as campanhas'}</span>
+                <span className="max-w-[12rem] truncate">{campaign ?? 'Campanha / origem'}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
-              <DropdownMenuLabel>Campanha do Meta</DropdownMenuLabel>
+              <DropdownMenuLabel>Campanha / origem</DropdownMenuLabel>
               <DropdownMenuRadioGroup value={campaign ?? ''} onValueChange={(v) => onCampaign(v || null)}>
-                <DropdownMenuRadioItem value="">Todas as campanhas</DropdownMenuRadioItem>
+                <DropdownMenuRadioItem value="">Todas</DropdownMenuRadioItem>
                 {campaigns.map((c) => (
                   <DropdownMenuRadioItem key={c.campaign} value={c.campaign}>
                     {c.campaign} ({c.total})

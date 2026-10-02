@@ -384,7 +384,7 @@ function CampaignComposer({ onClose, onError }: { onClose: () => void; onError: 
             <FilterChips label="Origem" values={SOURCES} selected={sources} onToggle={(v) => toggle(sources, v, setSources)} labelOf={(v) => SOURCE_LABELS[v as Source]} />
             {leadCampaigns.length > 0 && (
               <FilterChips
-                label="Campanha do Meta"
+                label="Campanha / origem"
                 values={leadCampaigns.map((c) => c.campaign)}
                 selected={campaignNames}
                 onToggle={(v) => toggle(campaignNames, v, setCampaignNames)}
