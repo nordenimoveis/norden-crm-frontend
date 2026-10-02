@@ -58,6 +58,7 @@ export function KanbanBoard() {
   const search = useDebouncedValue(rawSearch, 300);
   const [temperature, setTemperature] = useState<Temperature | null>(null);
   const [brokerId, setBrokerId] = useState<string | null>(null);
+  const [campaign, setCampaign] = useState<string | null>(null);
   const [includeOld, setIncludeOld] = useState(false);
 
   const filters = useMemo(
@@ -65,9 +66,10 @@ export function KanbanBoard() {
       q: search || undefined,
       temperature,
       brokerId: manager ? brokerId : null,
+      campaign,
       includeOld,
     }),
-    [search, temperature, brokerId, includeOld, manager],
+    [search, temperature, brokerId, campaign, includeOld, manager],
   );
 
   const stagesQuery = useStages();
@@ -164,6 +166,8 @@ export function KanbanBoard() {
           brokerId={brokerId}
           onBroker={setBrokerId}
           brokers={brokersQuery.data ?? []}
+          campaign={campaign}
+          onCampaign={setCampaign}
         />
       </div>
 

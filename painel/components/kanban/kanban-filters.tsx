@@ -1,6 +1,7 @@
 'use client';
 
-import { Search, Users, Check, Archive } from 'lucide-react';
+import { Search, Users, Check, Archive, Megaphone } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import {
   DropdownMenu,
@@ -10,6 +11,7 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { getLeadCampaigns } from '@/lib/api/leads';
 import { TEMPERATURES, TEMPERATURE_LABELS, type Broker, type Temperature } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
 import { cn } from '@/lib/utils';
@@ -25,6 +27,8 @@ interface Props {
   brokerId: string | null;
   onBroker: (id: string | null) => void;
   brokers: Broker[];
+  campaign: string | null;
+  onCampaign: (c: string | null) => void;
 }
 
 export function KanbanFilters({
@@ -38,8 +42,11 @@ export function KanbanFilters({
   brokerId,
   onBroker,
   brokers,
+  campaign,
+  onCampaign,
 }: Props) {
   const brokerName = brokers.find((b) => b.id === brokerId)?.name;
+  const { data: campaigns = [] } = useQuery({ queryKey: ['lead-campaigns'], queryFn: getLeadCampaigns });
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -80,6 +87,36 @@ export function KanbanFilters({
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        {/* Filtro por campanha do Meta Ads (listas por campanha) */}
+        {campaigns.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm transition-colors',
+                  campaign ? 'border-accent/40 bg-accent/[0.08] text-foreground' : 'border-input bg-card text-foreground hover:bg-muted',
+                )}
+                title="Filtrar por campanha do Meta Ads"
+              >
+                <Megaphone className="size-4 text-muted-foreground" />
+                <span className="max-w-[12rem] truncate">{campaign ?? 'Todas as campanhas'}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+              <DropdownMenuLabel>Campanha do Meta</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={campaign ?? ''} onValueChange={(v) => onCampaign(v || null)}>
+                <DropdownMenuRadioItem value="">Todas as campanhas</DropdownMenuRadioItem>
+                {campaigns.map((c) => (
+                  <DropdownMenuRadioItem key={c.campaign} value={c.campaign}>
+                    {c.campaign} ({c.total})
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
         {/* Filtro por corretor — só gestores */}
         {isManager && (
           <DropdownMenu>

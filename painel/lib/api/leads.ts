@@ -1,13 +1,20 @@
 'use client';
 
 import { apiFetch } from './client';
-import type { LeadDetail, LeadSummary, Temperature } from '@/lib/types';
+import type { LeadCampaign, LeadDetail, LeadSummary, Temperature } from '@/lib/types';
+
+/** Campanhas de origem do Meta Ads, com contagem de leads (listas por campanha). */
+export function getLeadCampaigns(): Promise<LeadCampaign[]> {
+  return apiFetch<LeadCampaign[]>('lead-campaigns');
+}
 
 export interface LeadFilters {
   q?: string;
   temperature?: Temperature | null;
   brokerId?: string | null;
   source?: string | null;
+  /** Campanha de origem do Meta Ads. */
+  campaign?: string | null;
   /** Inclui a Base Antiga (fora do Kanban por padrão). */
   includeOld?: boolean;
 }
@@ -19,6 +26,7 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.temperature) p.set('temperature', f.temperature);
   if (f.brokerId) p.set('brokerId', f.brokerId);
   if (f.source) p.set('source', f.source);
+  if (f.campaign) p.set('campaign', f.campaign);
   if (f.includeOld) p.set('includeOld', 'true');
   const s = p.toString();
   return s ? `?${s}` : '';

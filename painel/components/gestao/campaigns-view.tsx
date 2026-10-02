@@ -19,6 +19,7 @@ import {
 import { useStages } from '@/hooks/use-pipeline';
 import { useDebouncedValue } from '@/hooks/use-debounced-value';
 import { previewAudience } from '@/lib/api/campaigns';
+import { getLeadCampaigns } from '@/lib/api/leads';
 import { ApiError } from '@/lib/api/client';
 import {
   CAMPAIGN_STATUS_LABELS,
@@ -308,14 +309,17 @@ function CampaignComposer({ onClose, onError }: { onClose: () => void; onError: 
   const [temps, setTemps] = useState<string[]>([]);
   const [stageKeys, setStageKeys] = useState<string[]>([]);
   const [sources, setSources] = useState<string[]>([]);
+  const [campaignNames, setCampaignNames] = useState<string[]>([]);
   const [includeOld, setIncludeOld] = useState(false);
   const [when, setWhen] = useState<'agora' | 'agendar'>('agora');
   const [scheduledFor, setScheduledFor] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const { data: leadCampaigns = [] } = useQuery({ queryKey: ['lead-campaigns'], queryFn: getLeadCampaigns });
+
   const filters: CampaignFilters = useMemo(
-    () => ({ temperatures: temps, stages: stageKeys, sources, includeOld }),
-    [temps, stageKeys, sources, includeOld],
+    () => ({ temperatures: temps, stages: stageKeys, sources, campaigns: campaignNames, includeOld }),
+    [temps, stageKeys, sources, campaignNames, includeOld],
   );
   const debFilters = useDebouncedValue(filters, 400);
   const audience = useQuery({ queryKey: ['audience', debFilters], queryFn: () => previewAudience(debFilters) });
@@ -378,6 +382,18 @@ function CampaignComposer({ onClose, onError }: { onClose: () => void; onError: 
             <FilterChips label="Temperatura" values={TEMPERATURES} selected={temps} onToggle={(v) => toggle(temps, v, setTemps)} labelOf={(v) => TEMPERATURE_LABELS[v as keyof typeof TEMPERATURE_LABELS]} dotOf={(v) => TEMP_DOT[v as keyof typeof TEMP_DOT]} />
             <FilterChips label="Etapa" values={stages.map((s) => s.key)} selected={stageKeys} onToggle={(v) => toggle(stageKeys, v, setStageKeys)} labelOf={(v) => stages.find((s) => s.key === v)?.label ?? v} />
             <FilterChips label="Origem" values={SOURCES} selected={sources} onToggle={(v) => toggle(sources, v, setSources)} labelOf={(v) => SOURCE_LABELS[v as Source]} />
+            {leadCampaigns.length > 0 && (
+              <FilterChips
+                label="Campanha do Meta"
+                values={leadCampaigns.map((c) => c.campaign)}
+                selected={campaignNames}
+                onToggle={(v) => toggle(campaignNames, v, setCampaignNames)}
+                labelOf={(v) => {
+                  const n = leadCampaigns.find((c) => c.campaign === v)?.total;
+                  return n != null ? `${v} (${n})` : v;
+                }}
+              />
+            )}
             <label className="flex items-center gap-2 pt-1 text-sm">
               <input type="checkbox" checked={includeOld} onChange={(e) => setIncludeOld(e.target.checked)} className="size-4" />
               Incluir Base Antiga

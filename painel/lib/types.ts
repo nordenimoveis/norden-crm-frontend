@@ -121,8 +121,15 @@ export interface CampaignFilters {
   stages?: string[];
   temperatures?: string[];
   sources?: string[];
+  campaigns?: string[];
   brokerId?: string | null;
   includeOld?: boolean;
+}
+
+/** Campanha de origem do Meta Ads, com a contagem de leads. */
+export interface LeadCampaign {
+  campaign: string;
+  total: number;
 }
 
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
