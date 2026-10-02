@@ -37,7 +37,7 @@ import { TEMP_DOT } from '@/lib/temperature';
 import { formatDateTime } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
-const SOURCES: Source[] = ['META_ADS', 'INSTAGRAM', 'SITE', 'WHATSAPP_DIRETO', 'MANUAL'];
+const SOURCES: Source[] = ['META_ADS', 'INSTAGRAM', 'SITE', 'WHATSAPP_DIRETO', 'MANUAL', 'BASE_ANTIGA'];
 const msg = (e: unknown) => (e instanceof ApiError ? e.message : 'Não foi possível concluir');
 const statusVariant = (s: CampaignStatus) =>
   s === 'CANCELADA' ? 'alert' : s === 'CONCLUIDA' || s === 'ENVIANDO' ? 'accent' : 'outline';
