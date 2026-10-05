@@ -1,8 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Clock, FileText, Mail, Paperclip, Send, Sparkles, StickyNote, X, Zap } from 'lucide-react';
+import { Clock, FileText, Mail, Paperclip, RotateCcw, Send, Sparkles, StickyNote, X, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSendActions } from '@/hooks/use-messages';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
 import { renderQuickReply } from '@/lib/api/quick-replies';
@@ -32,7 +34,9 @@ export function Composer({
   const [templateOpen, setTemplateOpen] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
-  const { text, note, template, attach } = useSendActions(leadId);
+  const [reengageOpen, setReengageOpen] = useState(false);
+  const [subject, setSubject] = useState('');
+  const { text, note, template, attach, retomada } = useSendActions(leadId);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -112,6 +116,22 @@ export function Composer({
     });
   }
 
+  function sendReengage() {
+    const s = subject.trim();
+    if (!s) return;
+    setError(null);
+    retomada.mutate(s, {
+      onSuccess: () => {
+        setReengageOpen(false);
+        setSubject('');
+      },
+      onError: (e) => {
+        setReengageOpen(false);
+        setError(e instanceof ApiError ? e.message : 'Não foi possível enviar a retomada');
+      },
+    });
+  }
+
   // Colar print (Ctrl/Cmd+V com imagem na área de transferência).
   function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
     if (noteMode || disabled) return;
@@ -151,13 +171,24 @@ export function Composer({
 
       {/* Aviso: fora da janela de 24h do WhatsApp (nunca abriu, ou expirou) */}
       {disabled && (
-        <div className="mb-2.5 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] px-3 py-2 text-xs font-medium text-amber-700 dark:text-amber-500">
-          <Clock className="mt-0.5 size-3.5 shrink-0" />
-          <span>
-            {windowExpiresAt
-              ? 'Tempo de resposta de 24h esgotado. Envie um template aprovado.'
-              : 'O cliente ainda não respondeu no WhatsApp — só dá para enviar um template. O texto livre abre assim que ele responder.'}
-          </span>
+        <div className="mb-2.5 rounded-lg border border-amber-500/30 bg-amber-500/[0.08] px-3 py-2">
+          <div className="flex items-start gap-2 text-xs font-medium text-amber-700 dark:text-amber-500">
+            <Clock className="mt-0.5 size-3.5 shrink-0" />
+            <span>
+              {windowExpiresAt
+                ? 'Tempo de resposta de 24h esgotado. Envie um template aprovado ou retome o contato.'
+                : 'O cliente ainda não respondeu no WhatsApp — só dá para enviar um template. O texto livre abre assim que ele responder.'}
+            </span>
+          </div>
+          {windowExpiresAt && (
+            <button
+              type="button"
+              onClick={() => setReengageOpen(true)}
+              className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-accent/40 bg-accent/[0.08] px-2.5 py-1.5 text-xs font-semibold text-accent transition-colors hover:bg-accent/[0.16]"
+            >
+              <RotateCcw className="size-3.5" /> Retomar contato
+            </button>
+          )}
         </div>
       )}
 
@@ -352,6 +383,43 @@ export function Composer({
           })
         }
       />
+
+      {/* Retomada de contato: template com o assunto digitado */}
+      <Dialog open={reengageOpen} onOpenChange={setReengageOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <RotateCcw className="size-4 text-accent" /> Retomar contato
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Fora das 24h só dá para enviar template. Escreva o <span className="font-medium text-foreground">assunto</span> da conversa para retomar de onde parou.
+          </p>
+          <Input
+            autoFocus
+            value={subject}
+            onChange={(e) => setSubject(e.target.value)}
+            maxLength={120}
+            placeholder="ex.: o material do Origem Jurerê"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && subject.trim()) {
+                e.preventDefault();
+                sendReengage();
+              }
+            }}
+          />
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm leading-relaxed">
+            Oi <span className="text-muted-foreground">[cliente]</span>, tudo bem? Aqui é <span className="text-muted-foreground">[você]</span>, da Norden Imóveis. Passando para retomar nossa conversa sobre{' '}
+            <span className="font-medium text-foreground">{subject.trim() || '[assunto]'}</span>. Fico à disposição para seguir de onde paramos — é só me chamar.
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setReengageOpen(false)}>Cancelar</Button>
+            <Button onClick={sendReengage} disabled={!subject.trim() || retomada.isPending}>
+              <Send className="size-4" /> Enviar retomada
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

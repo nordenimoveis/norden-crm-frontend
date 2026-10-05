@@ -45,3 +45,11 @@ export function sendTemplate(leadId: string, step: number): Promise<unknown> {
     body: JSON.stringify({ step }),
   });
 }
+
+/** Retomada de contato (fora das 24h): template de retomada com o assunto digitado. */
+export function reengage(leadId: string, subject: string): Promise<unknown> {
+  return apiFetch(`leads/${leadId}/reengage`, {
+    method: 'POST',
+    body: JSON.stringify({ subject }),
+  });
+}
