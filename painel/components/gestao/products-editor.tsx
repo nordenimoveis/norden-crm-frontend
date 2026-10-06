@@ -2,12 +2,12 @@
 
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Eye, EyeOff, Plus, Trash2 } from 'lucide-react';
+import { Eye, EyeOff, Plus, Trash2, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useProducts } from '@/hooks/use-products';
 import { ApiError } from '@/lib/api/client';
-import { createProduct, deleteProduct, updateProduct } from '@/lib/api/products';
+import { createProduct, deleteProduct, rescanProducts, updateProduct } from '@/lib/api/products';
 import type { Product } from '@/lib/types';
 import { cn } from '@/lib/utils';
 
@@ -18,14 +18,30 @@ export function ProductsEditor() {
   const qc = useQueryClient();
   const { data: products = [], isLoading } = useProducts();
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [newName, setNewName] = useState('');
   const [newAliases, setNewAliases] = useState('');
 
   const invalidate = () => {
     qc.invalidateQueries({ queryKey: ['products'] });
     qc.invalidateQueries({ queryKey: ['lead-interests'] });
+    qc.invalidateQueries({ queryKey: ['leads'] });
   };
   const onErr = (e: unknown) => setError(msg(e));
+
+  const rescanM = useMutation({
+    mutationFn: rescanProducts,
+    onSuccess: (r) => {
+      setError(null);
+      setInfo(
+        r.tagged > 0
+          ? `${r.tagged} lead(s) etiquetado(s) com empreendimento (de ${r.scanned} conversas lidas).`
+          : `Nenhum empreendimento novo reconhecido (${r.scanned} conversas lidas). Verifique os apelidos.`,
+      );
+      invalidate();
+    },
+    onError: onErr,
+  });
 
   const createM = useMutation({
     mutationFn: (v: { name: string; aliases?: string[] }) => createProduct(v),
@@ -56,6 +72,22 @@ export function ProductsEditor() {
       {error && (
         <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>
       )}
+      {info && (
+        <p className="rounded-md border border-accent/30 bg-accent/10 px-3 py-2 text-sm text-foreground">{info}</p>
+      )}
+
+      {/* Reconhecer empreendimento nas conversas de leads já existentes. */}
+      <div className="flex flex-wrap items-center gap-3 rounded-lg border border-border bg-muted/30 p-3">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium text-foreground">Reconhecer nos leads existentes</p>
+          <p className="text-xs text-muted-foreground">
+            Lê as conversas dos leads que ainda não têm empreendimento e etiqueta quando o cliente citou um do catálogo.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => rescanM.mutate()} disabled={rescanM.isPending} className="shrink-0">
+          <Wand2 className="size-4" /> {rescanM.isPending ? 'Lendo conversas…' : 'Reconhecer agora'}
+        </Button>
+      </div>
 
       <ul className="space-y-2">
         {products.map((p) => (

@@ -12,3 +12,7 @@ export const updateProduct = (id: string, patch: { name?: string; aliases?: stri
   apiFetch<Product>(`products/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
 export const deleteProduct = (id: string) => apiFetch<void>(`products/${id}`, { method: 'DELETE' });
+
+/** Reconhece o empreendimento nas conversas de leads existentes sem produto. */
+export const rescanProducts = () =>
+  apiFetch<{ scanned: number; tagged: number }>('products/rescan', { method: 'POST', body: JSON.stringify({}) });
