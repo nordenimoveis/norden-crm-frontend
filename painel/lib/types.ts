@@ -181,6 +181,9 @@ export interface LeadSummary {
   /** Campanha que a última resposta está respondendo (caixa por campanha). */
   lastCampaignId?: string | null;
   lastCampaignName?: string | null;
+  inFunnel?: boolean;
+  /** Estado de triagem na caixa "Responderam". */
+  inboxStatus?: 'NOVO' | 'ACOMPANHANDO' | 'SEM_INTERESSE' | 'QUALIFICADO' | null;
   notes?: string | null;
   hasConversation?: boolean;
   lastInboundAt?: string | null;

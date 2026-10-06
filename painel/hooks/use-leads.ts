@@ -2,7 +2,10 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  discardLead,
+  followLead,
   getInboxCount,
+  getInboxStatusSummary,
   getLeads,
   getRespondedCampaigns,
   markLeadRead,
@@ -21,6 +24,32 @@ export function useInboxCount(enabled = true) {
 /** Seletor da caixa "Responderam": campanhas com leads que responderam. */
 export function useRespondedCampaigns() {
   return useQuery({ queryKey: ['responded-campaigns'], queryFn: getRespondedCampaigns, refetchInterval: 30_000 });
+}
+
+/** Resumo por estado de triagem dentro do filtro de campanha atual. */
+export function useInboxStatusSummary(filter: { respondingCampaignId?: string | null; respondingCampaign?: 'none' | null }) {
+  return useQuery({
+    queryKey: ['inbox-status-summary', filter],
+    queryFn: () => getInboxStatusSummary(filter),
+    refetchInterval: 30_000,
+  });
+}
+
+/** Ações de triagem da caixa (descartar / acompanhar) com revalidação. */
+export function useTriageActions() {
+  const qc = useQueryClient();
+  const invalidate = () => {
+    qc.invalidateQueries({ queryKey: ['leads'] });
+    qc.invalidateQueries({ queryKey: ['inbox-count'] });
+    qc.invalidateQueries({ queryKey: ['responded-campaigns'] });
+    qc.invalidateQueries({ queryKey: ['inbox-status-summary'] });
+  };
+  const discard = useMutation({
+    mutationFn: (v: { id: string; lossReasonId: string }) => discardLead(v.id, v.lossReasonId),
+    onSuccess: invalidate,
+  });
+  const follow = useMutation({ mutationFn: (id: string) => followLead(id), onSuccess: invalidate });
+  return { discard, follow };
 }
 
 /** Marca a conversa como lida (persistente) e revalida a caixa + contador. */

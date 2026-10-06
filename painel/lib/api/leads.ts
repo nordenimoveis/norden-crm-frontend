@@ -35,6 +35,27 @@ export function promoteLead(id: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/promote`, { method: 'POST', body: JSON.stringify({}) });
 }
 
+/** "Sem interesse": descarta da caixa marcando como Perdido com motivo. */
+export function discardLead(id: string, lossReasonId: string): Promise<LeadSummary> {
+  return apiFetch<LeadSummary>(`leads/${id}/discard`, { method: 'POST', body: JSON.stringify({ lossReasonId }) });
+}
+
+/** "Acompanhando": sai de Novos sem desfecho. */
+export function followLead(id: string): Promise<LeadSummary> {
+  return apiFetch<LeadSummary>(`leads/${id}/follow`, { method: 'POST', body: JSON.stringify({}) });
+}
+
+export type InboxStatus = 'NOVO' | 'ACOMPANHANDO' | 'SEM_INTERESSE' | 'QUALIFICADO';
+
+/** Resumo por estado de triagem dentro do filtro de campanha atual. */
+export function getInboxStatusSummary(f: { respondingCampaignId?: string | null; respondingCampaign?: 'none' | null }): Promise<Record<InboxStatus, number>> {
+  const p = new URLSearchParams();
+  if (f.respondingCampaignId) p.set('respondingCampaignId', f.respondingCampaignId);
+  if (f.respondingCampaign) p.set('respondingCampaign', f.respondingCampaign);
+  const s = p.toString();
+  return apiFetch<Record<InboxStatus, number>>(`leads/inbox-status-summary${s ? `?${s}` : ''}`);
+}
+
 /** Marca a conversa como lida (controle persistente de não lido). */
 export function markLeadRead(id: string): Promise<{ ok: boolean }> {
   return apiFetch<{ ok: boolean }>(`leads/${id}/read`, { method: 'POST', body: JSON.stringify({}) });
@@ -59,6 +80,8 @@ export interface LeadFilters {
   respondingCampaignId?: string | null;
   /** 'none' = respostas diretas (sem campanha). */
   respondingCampaign?: 'none' | null;
+  /** Estado de triagem na caixa "Responderam". */
+  inboxStatus?: InboxStatus | null;
   /** Inclui a Base Antiga (fora do Kanban por padrão). */
   includeOld?: boolean;
   limit?: number;
@@ -78,6 +101,7 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.responded) p.set('responded', 'true');
   if (f.respondingCampaignId) p.set('respondingCampaignId', f.respondingCampaignId);
   if (f.respondingCampaign) p.set('respondingCampaign', f.respondingCampaign);
+  if (f.inboxStatus) p.set('inboxStatus', f.inboxStatus);
   if (f.includeOld) p.set('includeOld', 'true');
   if (f.limit) p.set('limit', String(f.limit));
   const s = p.toString();
