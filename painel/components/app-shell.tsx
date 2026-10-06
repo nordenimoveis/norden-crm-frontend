@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 import {
   BarChart3,
   Ban,
+  Building2,
   Contact,
   Inbox,
   KanbanSquare,
@@ -52,6 +53,7 @@ const GESTAO: NavItem[] = [
   { href: '/configuracoes/campanhas', label: 'Campanhas', icon: Megaphone, managerOnly: true },
   { href: '/configuracoes/funil', label: 'Etapas do funil', icon: SlidersHorizontal, managerOnly: true },
   { href: '/configuracoes/motivos', label: 'Motivos de perda', icon: Ban, managerOnly: true },
+  { href: '/configuracoes/produtos', label: 'Empreendimentos', icon: Building2, managerOnly: true },
   { href: '/configuracoes/respostas', label: 'Respostas rápidas', icon: MessageSquareText, managerOnly: true },
   { href: '/configuracoes/importar', label: 'Importar base', icon: Upload, managerOnly: true },
   { href: '/configuracoes/usuarios', label: 'Usuários', icon: Users, managerOnly: true },

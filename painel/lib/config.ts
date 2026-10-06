@@ -37,6 +37,7 @@ const ALLOWED_PREFIXES = [
   'reengage',
   'pipeline',
   'loss-reasons',
+  'products',
   'campaigns',
   'campaign-templates',
   'quick-replies',

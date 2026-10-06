@@ -138,6 +138,15 @@ export interface LeadInterest {
   total: number;
 }
 
+/** Empreendimento do catálogo (vocabulário gerenciável). */
+export interface Product {
+  id: string;
+  name: string;
+  aliases: string[];
+  active: boolean;
+  position: number;
+}
+
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
   RASCUNHO: 'Rascunho',
   AGENDADA: 'Agendada',
