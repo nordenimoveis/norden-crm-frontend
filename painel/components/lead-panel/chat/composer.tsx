@@ -5,7 +5,7 @@ import { Clock, FileText, Mail, Paperclip, RotateCcw, Send, Sparkles, StickyNote
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { useSendActions } from '@/hooks/use-messages';
+import { useReengageVariants, useSendActions } from '@/hooks/use-messages';
 import { useQuickReplies } from '@/hooks/use-quick-replies';
 import { renderQuickReply } from '@/lib/api/quick-replies';
 import { ApiError } from '@/lib/api/client';
@@ -36,7 +36,9 @@ export function Composer({
   const [dragOver, setDragOver] = useState(false);
   const [reengageOpen, setReengageOpen] = useState(false);
   const [subject, setSubject] = useState('');
+  const [variant, setVariant] = useState('leve');
   const { text, note, template, attach, retomada } = useSendActions(leadId);
+  const { data: reengageVariants } = useReengageVariants();
   const taRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -120,17 +122,30 @@ export function Composer({
     const s = subject.trim();
     if (!s) return;
     setError(null);
-    retomada.mutate(s, {
-      onSuccess: () => {
-        setReengageOpen(false);
-        setSubject('');
+    retomada.mutate(
+      { subject: s, variant },
+      {
+        onSuccess: () => {
+          setReengageOpen(false);
+          setSubject('');
+        },
+        onError: (e) => {
+          setReengageOpen(false);
+          setError(e instanceof ApiError ? e.message : 'Não foi possível enviar a retomada');
+        },
       },
-      onError: (e) => {
-        setReengageOpen(false);
-        setError(e instanceof ApiError ? e.message : 'Não foi possível enviar a retomada');
-      },
-    });
+    );
   }
+
+  /** Preview ao vivo: corpo da variação escolhida com cliente/você/assunto. */
+  const reengagePreview = useMemo(() => {
+    const def = reengageVariants?.find((v) => v.variant === variant) ?? reengageVariants?.[0];
+    if (!def) return '';
+    return def.body
+      .replace(/\{\{\s*1\s*\}\}/g, '[cliente]')
+      .replace(/\{\{\s*2\s*\}\}/g, '[você]')
+      .replace(/\{\{\s*3\s*\}\}/g, subject.trim() || '[assunto]');
+  }, [reengageVariants, variant, subject]);
 
   // Colar print (Ctrl/Cmd+V com imagem na área de transferência).
   function handlePaste(e: React.ClipboardEvent<HTMLTextAreaElement>) {
@@ -393,14 +408,34 @@ export function Composer({
             </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            Fora das 24h só dá para enviar template. Escreva o <span className="font-medium text-foreground">assunto</span> da conversa para retomar de onde parou.
+            Fora das 24h só dá para enviar template. Escolha o <span className="font-medium text-foreground">tom</span> e escreva o{' '}
+            <span className="font-medium text-foreground">assunto</span> para retomar conectado ao que você falou com o cliente.
           </p>
+          {reengageVariants && reengageVariants.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {reengageVariants.map((v) => (
+                <button
+                  key={v.variant}
+                  type="button"
+                  onClick={() => setVariant(v.variant)}
+                  className={cn(
+                    'rounded-full border px-3 py-1 text-xs transition-colors',
+                    variant === v.variant
+                      ? 'border-accent bg-accent/10 font-medium text-foreground'
+                      : 'border-border text-muted-foreground hover:bg-muted/60',
+                  )}
+                >
+                  {v.label}
+                </button>
+              ))}
+            </div>
+          )}
           <Input
             autoFocus
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             maxLength={120}
-            placeholder="ex.: o material do Origem Jurerê"
+            placeholder="ex.: o book do Origem Jurerê"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && subject.trim()) {
                 e.preventDefault();
@@ -408,9 +443,8 @@ export function Composer({
               }
             }}
           />
-          <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm leading-relaxed">
-            Oi <span className="text-muted-foreground">[cliente]</span>, tudo bem? Aqui é <span className="text-muted-foreground">[você]</span>, da Norden Imóveis. Passando para retomar nossa conversa sobre{' '}
-            <span className="font-medium text-foreground">{subject.trim() || '[assunto]'}</span>. Fico à disposição para seguir de onde paramos — é só me chamar.
+          <div className="rounded-lg border border-border bg-muted/40 p-3 text-sm leading-relaxed text-foreground">
+            {reengagePreview}
           </div>
           <DialogFooter>
             <Button variant="ghost" onClick={() => setReengageOpen(false)}>Cancelar</Button>

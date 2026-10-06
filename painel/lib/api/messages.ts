@@ -46,10 +46,23 @@ export function sendTemplate(leadId: string, step: number): Promise<unknown> {
   });
 }
 
-/** Retomada de contato (fora das 24h): template de retomada com o assunto digitado. */
-export function reengage(leadId: string, subject: string): Promise<unknown> {
+export interface ReengageVariant {
+  variant: string;
+  label: string;
+  template: string;
+  /** Corpo do template com {{1}} cliente, {{2}} corretor, {{3}} assunto. */
+  body: string;
+}
+
+/** Catálogo das variações de retomada (rótulo + corpo para o preview). */
+export function getReengageVariants(): Promise<ReengageVariant[]> {
+  return apiFetch<ReengageVariant[]>('reengage/variants');
+}
+
+/** Retomada de contato (fora das 24h): variação de template + assunto digitado. */
+export function reengage(leadId: string, subject: string, variant: string): Promise<unknown> {
   return apiFetch(`leads/${leadId}/reengage`, {
     method: 'POST',
-    body: JSON.stringify({ subject }),
+    body: JSON.stringify({ subject, variant }),
   });
 }

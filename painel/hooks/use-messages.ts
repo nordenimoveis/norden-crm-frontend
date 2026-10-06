@@ -1,8 +1,25 @@
 'use client';
 
-import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getMessages, reengage, sendAttachments, sendMessage, sendNote, sendTemplate } from '@/lib/api/messages';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  getMessages,
+  getReengageVariants,
+  reengage,
+  sendAttachments,
+  sendMessage,
+  sendNote,
+  sendTemplate,
+} from '@/lib/api/messages';
 import type { MessagesPage } from '@/lib/types';
+
+/** Catálogo das variações de retomada (carregado uma vez; muda muito raramente). */
+export function useReengageVariants() {
+  return useQuery({
+    queryKey: ['reengage-variants'],
+    queryFn: getReengageVariants,
+    staleTime: 60 * 60 * 1000,
+  });
+}
 
 /** Histórico paginado do chat (página 0 = mais recentes; próximas = mais antigas). */
 export function useMessages(leadId: string | null) {
@@ -31,6 +48,9 @@ export function useSendActions(leadId: string) {
     mutationFn: ({ files, caption }: { files: File[]; caption?: string }) => sendAttachments(leadId, files, caption),
     onSuccess: refresh,
   });
-  const retomada = useMutation({ mutationFn: (subject: string) => reengage(leadId, subject), onSuccess: refresh });
+  const retomada = useMutation({
+    mutationFn: ({ subject, variant }: { subject: string; variant: string }) => reengage(leadId, subject, variant),
+    onSuccess: refresh,
+  });
   return { text, note, template, attach, retomada };
 }

@@ -34,6 +34,7 @@ const ALLOWED_PREFIXES = [
   'auth/me',
   'leads',
   'lead-campaigns',
+  'reengage',
   'pipeline',
   'loss-reasons',
   'campaigns',
