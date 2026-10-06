@@ -13,6 +13,18 @@ export function getInboxCount(): Promise<{ count: number }> {
   return apiFetch<{ count: number }>('leads/inbox-count');
 }
 
+export interface RespondedCampaign {
+  campaignId: string | null;
+  campaignName: string | null;
+  total: number;
+  unread: number;
+}
+
+/** Seletor da caixa "Responderam": campanhas com leads que responderam (+ "Sem campanha"). */
+export function getRespondedCampaigns(): Promise<RespondedCampaign[]> {
+  return apiFetch<RespondedCampaign[]>('leads/responded-campaigns');
+}
+
 /** "Trazer para o funil": tira o lead da Base Antiga e atribui corretor (roleta). */
 export function promoteLead(id: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/promote`, { method: 'POST', body: JSON.stringify({}) });
@@ -34,6 +46,10 @@ export interface LeadFilters {
   tag?: string | null;
   /** Só leads que já responderam. */
   responded?: boolean;
+  /** Filtra pela campanha que a resposta está respondendo (caixa por campanha). */
+  respondingCampaignId?: string | null;
+  /** 'none' = respostas diretas (sem campanha). */
+  respondingCampaign?: 'none' | null;
   /** Inclui a Base Antiga (fora do Kanban por padrão). */
   includeOld?: boolean;
   limit?: number;
@@ -49,6 +65,8 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.campaign) p.set('campaign', f.campaign);
   if (f.tag) p.set('tag', f.tag);
   if (f.responded) p.set('responded', 'true');
+  if (f.respondingCampaignId) p.set('respondingCampaignId', f.respondingCampaignId);
+  if (f.respondingCampaign) p.set('respondingCampaign', f.respondingCampaign);
   if (f.includeOld) p.set('includeOld', 'true');
   if (f.limit) p.set('limit', String(f.limit));
   const s = p.toString();

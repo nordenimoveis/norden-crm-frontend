@@ -163,6 +163,9 @@ export interface LeadSummary {
   email?: string | null;
   tags: string[];
   campaign?: string | null;
+  /** Campanha que a última resposta está respondendo (caixa por campanha). */
+  lastCampaignId?: string | null;
+  lastCampaignName?: string | null;
   notes?: string | null;
   hasConversation?: boolean;
   lastInboundAt?: string | null;

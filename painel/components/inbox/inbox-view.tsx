@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
 import { TemperatureControl } from '@/components/kanban/temperature-control';
-import { useLeads, useUpdateLead, usePromoteLead, useMarkRead } from '@/hooks/use-leads';
+import { useLeads, useUpdateLead, usePromoteLead, useMarkRead, useRespondedCampaigns } from '@/hooks/use-leads';
 import { SOURCE_LABELS, type LeadSummary, type Source, type Temperature } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
 import { ApiError } from '@/lib/api/client';
@@ -25,13 +25,62 @@ function rel(iso?: string | null): string {
   return `há ${Math.floor(h / 24)} d`;
 }
 
+/** Aba de campanha no topo da caixa "Responderam". */
+function CampaignTab({
+  active,
+  onClick,
+  label,
+  total,
+  unread,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  total: number;
+  unread: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full border px-3 py-1 text-xs transition-colors',
+        active ? 'border-accent bg-accent/10 font-medium text-foreground' : 'border-border text-muted-foreground hover:bg-muted/60',
+      )}
+    >
+      <span className="max-w-[12rem] truncate">{label}</span>
+      <span className="text-muted-foreground">{total}</span>
+      {unread > 0 && (
+        <span className="grid min-w-[16px] place-items-center rounded-full bg-destructive px-1 text-[10px] font-semibold leading-4 text-destructive-foreground">
+          {unread > 9 ? '9+' : unread}
+        </span>
+      )}
+    </button>
+  );
+}
+
 export function InboxView() {
-  const filters = useMemo(() => ({ source: 'BASE_ANTIGA', responded: true, limit: 500 }), []);
+  // Seletor de campanha: 'all' (todas), 'none' (sem campanha) ou o id da campanha.
+  const [campaign, setCampaign] = useState<string>('all');
+  const filters = useMemo(
+    () => ({
+      source: 'BASE_ANTIGA',
+      responded: true,
+      limit: 500,
+      ...(campaign !== 'all' && campaign !== 'none' ? { respondingCampaignId: campaign } : {}),
+      ...(campaign === 'none' ? { respondingCampaign: 'none' as const } : {}),
+    }),
+    [campaign],
+  );
   const { data: leads = [], isLoading } = useLeads(filters);
+  const { data: campaignTabs = [] } = useRespondedCampaigns();
   const update = useUpdateLead(filters);
   const promote = usePromoteLead();
   const markRead = useMarkRead();
   const [error, setError] = useState<string | null>(null);
+
+  const totalAll = useMemo(() => campaignTabs.reduce((s, c) => s + c.total, 0), [campaignTabs]);
+  const unreadAll = useMemo(() => campaignTabs.reduce((s, c) => s + c.unread, 0), [campaignTabs]);
 
   // "Não lido" vem do servidor (persistente): o cliente respondeu depois da
   // última vez que a conversa foi aberta (ou nunca foi aberta).
@@ -80,6 +129,34 @@ export function InboxView() {
 
       {error && <p className="mb-3 rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</p>}
 
+      {/* Seletor por campanha: separa as respostas de cada disparo que você enviou. */}
+      {campaignTabs.length > 0 && (
+        <div className="mb-3 -mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+          <CampaignTab active={campaign === 'all'} onClick={() => setCampaign('all')} label="Todas" total={totalAll} unread={unreadAll} />
+          {campaignTabs
+            .filter((c) => c.campaignId)
+            .map((c) => (
+              <CampaignTab
+                key={c.campaignId}
+                active={campaign === c.campaignId}
+                onClick={() => setCampaign(c.campaignId as string)}
+                label={c.campaignName ?? 'Campanha'}
+                total={c.total}
+                unread={c.unread}
+              />
+            ))}
+          {campaignTabs.some((c) => !c.campaignId) && (
+            <CampaignTab
+              active={campaign === 'none'}
+              onClick={() => setCampaign('none')}
+              label="Sem campanha"
+              total={campaignTabs.find((c) => !c.campaignId)?.total ?? 0}
+              unread={campaignTabs.find((c) => !c.campaignId)?.unread ?? 0}
+            />
+          )}
+        </div>
+      )}
+
       <div className="mb-3 flex items-center gap-3 text-sm text-muted-foreground">
         <span><span className="font-medium text-foreground">{leads.length}</span> na caixa</span>
         {novas > 0 && (
@@ -116,7 +193,12 @@ export function InboxView() {
                       {nova && (
                         <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-[18px] text-destructive-foreground">nova</span>
                       )}
-                      <Badge variant="outline">{l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
+                      <Badge variant="outline">{l.lastCampaignName ?? l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
+                      {l.interest && (
+                        <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">
+                          {l.interest}
+                        </span>
+                      )}
                     </span>
                     <span className="mt-0.5 block text-xs text-muted-foreground">
                       {l.phone ?? '—'}

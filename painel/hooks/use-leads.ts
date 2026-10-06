@@ -1,12 +1,26 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { getInboxCount, getLeads, markLeadRead, patchLead, promoteLead, type LeadFilters, type LeadPatch } from '@/lib/api/leads';
+import {
+  getInboxCount,
+  getLeads,
+  getRespondedCampaigns,
+  markLeadRead,
+  patchLead,
+  promoteLead,
+  type LeadFilters,
+  type LeadPatch,
+} from '@/lib/api/leads';
 import type { LeadSummary } from '@/lib/types';
 
 /** Contador da caixa "Responderam" (não lidos; atualiza sozinho a cada 30s). */
 export function useInboxCount(enabled = true) {
   return useQuery({ queryKey: ['inbox-count'], queryFn: getInboxCount, enabled, refetchInterval: 30_000 });
+}
+
+/** Seletor da caixa "Responderam": campanhas com leads que responderam. */
+export function useRespondedCampaigns() {
+  return useQuery({ queryKey: ['responded-campaigns'], queryFn: getRespondedCampaigns, refetchInterval: 30_000 });
 }
 
 /** Marca a conversa como lida (persistente) e revalida a caixa + contador. */
@@ -17,6 +31,7 @@ export function useMarkRead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['leads'] });
       qc.invalidateQueries({ queryKey: ['inbox-count'] });
+      qc.invalidateQueries({ queryKey: ['responded-campaigns'] });
     },
   });
 }
@@ -29,6 +44,7 @@ export function usePromoteLead() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['leads'] });
       qc.invalidateQueries({ queryKey: ['inbox-count'] });
+      qc.invalidateQueries({ queryKey: ['responded-campaigns'] });
     },
   });
 }
