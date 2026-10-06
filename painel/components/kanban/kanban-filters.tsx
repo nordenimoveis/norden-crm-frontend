@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Users, Check, Archive, Megaphone } from 'lucide-react';
+import { Search, Users, Check, Archive, Megaphone, Building2, XCircle } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
 import { Input } from '@/components/ui/input';
 import {
@@ -11,8 +11,8 @@ import {
   DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { getLeadCampaigns } from '@/lib/api/leads';
-import { TEMPERATURES, TEMPERATURE_LABELS, type Broker, type Temperature } from '@/lib/types';
+import { getLeadCampaigns, getLeadInterests } from '@/lib/api/leads';
+import { TEMPERATURES, TEMPERATURE_LABELS, type Broker, type LossReason, type Temperature } from '@/lib/types';
 import { TEMP_DOT } from '@/lib/temperature';
 import { cn } from '@/lib/utils';
 
@@ -29,6 +29,11 @@ interface Props {
   brokers: Broker[];
   campaign: string | null;
   onCampaign: (c: string | null) => void;
+  interest: string | null;
+  onInterest: (i: string | null) => void;
+  lossReasonId: string | null;
+  onLossReason: (id: string | null) => void;
+  lossReasons: LossReason[];
 }
 
 export function KanbanFilters({
@@ -44,9 +49,16 @@ export function KanbanFilters({
   brokers,
   campaign,
   onCampaign,
+  interest,
+  onInterest,
+  lossReasonId,
+  onLossReason,
+  lossReasons,
 }: Props) {
   const brokerName = brokers.find((b) => b.id === brokerId)?.name;
   const { data: campaigns = [] } = useQuery({ queryKey: ['lead-campaigns'], queryFn: getLeadCampaigns });
+  const { data: interests = [] } = useQuery({ queryKey: ['lead-interests'], queryFn: getLeadInterests });
+  const lossReasonLabel = lossReasons.find((r) => r.id === lossReasonId)?.label;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -110,6 +122,66 @@ export function KanbanFilters({
                 {campaigns.map((c) => (
                   <DropdownMenuRadioItem key={c.campaign} value={c.campaign}>
                     {c.campaign} ({c.total})
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Filtro por empreendimento/produto */}
+        {interests.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm transition-colors',
+                  interest ? 'border-accent/40 bg-accent/[0.08] text-foreground' : 'border-input bg-card text-foreground hover:bg-muted',
+                )}
+                title="Filtrar por empreendimento"
+              >
+                <Building2 className="size-4 text-muted-foreground" />
+                <span className="max-w-[12rem] truncate">{interest ?? 'Empreendimento'}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+              <DropdownMenuLabel>Empreendimento</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={interest ?? ''} onValueChange={(v) => onInterest(v || null)}>
+                <DropdownMenuRadioItem value="">Todos</DropdownMenuRadioItem>
+                {interests.map((i) => (
+                  <DropdownMenuRadioItem key={i.interest} value={i.interest}>
+                    {i.interest} ({i.total})
+                  </DropdownMenuRadioItem>
+                ))}
+              </DropdownMenuRadioGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Filtro por motivo de perda */}
+        {lossReasons.length > 0 && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className={cn(
+                  'inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm transition-colors',
+                  lossReasonId ? 'border-accent/40 bg-accent/[0.08] text-foreground' : 'border-input bg-card text-foreground hover:bg-muted',
+                )}
+                title="Filtrar por motivo de perda"
+              >
+                <XCircle className="size-4 text-muted-foreground" />
+                <span className="max-w-[12rem] truncate">{lossReasonLabel ?? 'Motivo de perda'}</span>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+              <DropdownMenuLabel>Motivo de perda</DropdownMenuLabel>
+              <DropdownMenuRadioGroup value={lossReasonId ?? ''} onValueChange={(v) => onLossReason(v || null)}>
+                <DropdownMenuRadioItem value="">Todos</DropdownMenuRadioItem>
+                {lossReasons.map((r) => (
+                  <DropdownMenuRadioItem key={r.id} value={r.id}>
+                    {r.label}
                   </DropdownMenuRadioItem>
                 ))}
               </DropdownMenuRadioGroup>

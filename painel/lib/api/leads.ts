@@ -1,11 +1,16 @@
 'use client';
 
 import { apiFetch } from './client';
-import type { LeadCampaign, LeadDetail, LeadSummary, Temperature } from '@/lib/types';
+import type { LeadCampaign, LeadDetail, LeadInterest, LeadSummary, Temperature } from '@/lib/types';
 
 /** Campanhas de origem do Meta Ads, com contagem de leads (listas por campanha). */
 export function getLeadCampaigns(): Promise<LeadCampaign[]> {
   return apiFetch<LeadCampaign[]>('lead-campaigns');
+}
+
+/** Empreendimentos/produtos distintos (de leads.interest) com contagem, para o filtro. */
+export function getLeadInterests(): Promise<LeadInterest[]> {
+  return apiFetch<LeadInterest[]>('leads/interests');
 }
 
 /** Contador da caixa "Responderam" (base antiga que respondeu, aguardando triagem). */
@@ -44,6 +49,10 @@ export interface LeadFilters {
   campaign?: string | null;
   /** Etiqueta (ex.: "Proprietário", "Base Antiga"). */
   tag?: string | null;
+  /** Empreendimento/produto de interesse. */
+  interest?: string | null;
+  /** Motivo de perda (na etapa Perdido). */
+  lossReasonId?: string | null;
   /** Só leads que já responderam. */
   responded?: boolean;
   /** Filtra pela campanha que a resposta está respondendo (caixa por campanha). */
@@ -64,6 +73,8 @@ export function buildLeadQuery(f: LeadFilters): string {
   if (f.source) p.set('source', f.source);
   if (f.campaign) p.set('campaign', f.campaign);
   if (f.tag) p.set('tag', f.tag);
+  if (f.interest) p.set('interest', f.interest);
+  if (f.lossReasonId) p.set('lossReasonId', f.lossReasonId);
   if (f.responded) p.set('responded', 'true');
   if (f.respondingCampaignId) p.set('respondingCampaignId', f.respondingCampaignId);
   if (f.respondingCampaign) p.set('respondingCampaign', f.respondingCampaign);

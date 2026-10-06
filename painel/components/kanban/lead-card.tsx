@@ -70,6 +70,12 @@ export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function
 
       <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1">
         <Badge variant="outline">{SOURCE_LABELS[lead.source]}</Badge>
+        {/* Empreendimento/produto por que o lead veio — visível sem abrir o card. */}
+        {lead.interest && (
+          <span className="inline-flex max-w-[11rem] items-center truncate rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent" title={lead.interest}>
+            {lead.interest}
+          </span>
+        )}
         {lead.brokerName && (
           <span className="truncate text-xs text-muted-foreground">{lead.brokerName}</span>
         )}
@@ -86,7 +92,11 @@ export const LeadCardView = React.forwardRef<HTMLDivElement, ViewProps>(function
       )}
 
       {lost && lostReasonLabel && (
-        <div className="mt-2 text-xs text-muted-foreground">Motivo: {lostReasonLabel}</div>
+        <div className="mt-2">
+          <span className="inline-flex items-center rounded-full border border-border bg-muted/60 px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+            Motivo: {lostReasonLabel}
+          </span>
+        </div>
       )}
     </div>
   );

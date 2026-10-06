@@ -59,6 +59,8 @@ export function KanbanBoard() {
   const [temperature, setTemperature] = useState<Temperature | null>(null);
   const [brokerId, setBrokerId] = useState<string | null>(null);
   const [campaign, setCampaign] = useState<string | null>(null);
+  const [interest, setInterest] = useState<string | null>(null);
+  const [lossReasonId, setLossReasonId] = useState<string | null>(null);
   const [includeOld, setIncludeOld] = useState(false);
 
   const filters = useMemo(
@@ -67,9 +69,11 @@ export function KanbanBoard() {
       temperature,
       brokerId: manager ? brokerId : null,
       campaign,
+      interest,
+      lossReasonId,
       includeOld,
     }),
-    [search, temperature, brokerId, campaign, includeOld, manager],
+    [search, temperature, brokerId, campaign, interest, lossReasonId, includeOld, manager],
   );
 
   const stagesQuery = useStages();
@@ -168,6 +172,11 @@ export function KanbanBoard() {
           brokers={brokersQuery.data ?? []}
           campaign={campaign}
           onCampaign={setCampaign}
+          interest={interest}
+          onInterest={setInterest}
+          lossReasonId={lossReasonId}
+          onLossReason={setLossReasonId}
+          lossReasons={reasonsQuery.data ?? []}
         />
       </div>
 

@@ -132,6 +132,12 @@ export interface LeadCampaign {
   total: number;
 }
 
+/** Empreendimento/produto de interesse, com a contagem de leads. */
+export interface LeadInterest {
+  interest: string;
+  total: number;
+}
+
 export const CAMPAIGN_STATUS_LABELS: Record<CampaignStatus, string> = {
   RASCUNHO: 'Rascunho',
   AGENDADA: 'Agendada',
