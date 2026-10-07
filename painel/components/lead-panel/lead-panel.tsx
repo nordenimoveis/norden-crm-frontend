@@ -24,6 +24,7 @@ import { useStages } from '@/hooks/use-pipeline';
 import { useBrokers } from '@/hooks/use-brokers';
 import { useLossReasons } from '@/hooks/use-loss-reasons';
 import { useSession } from '@/components/session-provider';
+import { ActivitiesSection } from '@/components/activities/activities-section';
 import {
   SOURCE_LABELS,
   TEMPERATURE_LABELS,
@@ -265,6 +266,9 @@ function PanelBody({ leadId }: { leadId: string }) {
             <p className="mt-3 whitespace-pre-wrap rounded-md bg-muted/50 p-2.5 text-sm">{lead.notes}</p>
           )}
         </Section>
+
+        {/* Atividades (vinculadas ao negócio) */}
+        <ActivitiesSection leadId={leadId} />
 
         {/* Régua */}
         <Section title="Régua de cadência">

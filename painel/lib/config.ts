@@ -45,6 +45,7 @@ const ALLOWED_PREFIXES = [
   'users',
   'reports',
   'tasks',
+  'activities',
   'push',
 ];
 

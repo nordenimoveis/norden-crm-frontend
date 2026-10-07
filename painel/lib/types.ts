@@ -138,6 +138,25 @@ export interface LeadInterest {
   total: number;
 }
 
+export type ActivityType = 'LIGACAO' | 'WHATSAPP' | 'REUNIAO' | 'VISITA' | 'TAREFA' | 'PRAZO' | 'EMAIL';
+
+/** Atividade da agenda do corretor, vinculada a um negócio (lead). */
+export interface Activity {
+  id: string;
+  leadId: string;
+  leadName?: string;
+  type: ActivityType;
+  subject: string;
+  notes: string | null;
+  dueAt: string | null;
+  durationMin: number | null;
+  done: boolean;
+  doneAt: string | null;
+  brokerId: string | null;
+  brokerName?: string | null;
+  createdAt: string;
+}
+
 /** Empreendimento do catálogo (vocabulário gerenciável). */
 export interface Product {
   id: string;

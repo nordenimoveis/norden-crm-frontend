@@ -7,6 +7,7 @@ import {
   BarChart3,
   Ban,
   Building2,
+  CalendarCheck,
   Contact,
   Inbox,
   KanbanSquare,
@@ -47,6 +48,7 @@ const PRINCIPAL: NavItem[] = [
   { href: '/responderam', label: 'Responderam', icon: Inbox, managerOnly: true, badge: 'inbox' },
   { href: '/leads', label: 'Leads', icon: Contact },
   { href: '/tarefas', label: 'Tarefas', icon: ListChecks, badge: 'tasks' },
+  { href: '/atividades', label: 'Atividades', icon: CalendarCheck },
 ];
 
 const GESTAO: NavItem[] = [
