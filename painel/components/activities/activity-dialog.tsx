@@ -73,39 +73,44 @@ export function ActivityDialog({
 
         <Input autoFocus value={subject} onChange={(e) => setSubject(e.target.value)} maxLength={140} placeholder="Assunto (ex.: Ligar para confirmar visita)" />
 
-        {/* Linha de tipos (ícones) */}
-        <div className="flex flex-wrap gap-1.5">
-          {ACTIVITY_TYPES.map((t) => {
-            const Icon = t.icon;
-            const active = type === t.type;
-            return (
-              <button
-                key={t.type}
-                type="button"
-                onClick={() => setType(t.type)}
-                title={t.label}
-                className={cn(
-                  'inline-flex size-9 items-center justify-center rounded-md border transition-colors',
-                  active ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted-foreground hover:bg-muted/60',
-                )}
-              >
-                <Icon className="size-4" />
-              </button>
-            );
-          })}
-        </div>
-        <p className="-mt-1 text-xs text-muted-foreground">{ACTIVITY_TYPES.find((t) => t.type === type)?.label}</p>
-
-        {/* Negócio vinculado */}
-        {needsLead ? (
-          <LeadPicker value={lead} onChange={setLead} />
-        ) : (
-          lead?.name && (
+        {/* Negócio vinculado (logo abaixo do assunto, como no Pipedrive) */}
+        <div>
+          <span className="mb-1 block text-xs font-medium text-muted-foreground">
+            Negócio / lead {needsLead && <span className="text-destructive">*</span>}
+          </span>
+          {needsLead ? (
+            <LeadPicker value={lead} onChange={setLead} />
+          ) : (
             <div className="rounded-md border border-border bg-muted/40 px-3 py-2 text-sm">
-              Negócio: <span className="font-medium text-foreground">{lead.name}</span>
+              <span className="font-medium text-foreground">{lead?.name || 'Este negócio'}</span>
             </div>
-          )
-        )}
+          )}
+        </div>
+
+        {/* Linha de tipos (ícones) */}
+        <div>
+          <span className="mb-1 block text-xs font-medium text-muted-foreground">Tipo</span>
+          <div className="flex flex-wrap gap-1.5">
+            {ACTIVITY_TYPES.map((t) => {
+              const Icon = t.icon;
+              const active = type === t.type;
+              return (
+                <button
+                  key={t.type}
+                  type="button"
+                  onClick={() => setType(t.type)}
+                  title={t.label}
+                  className={cn(
+                    'inline-flex size-9 items-center justify-center rounded-md border transition-colors',
+                    active ? 'border-accent bg-accent/10 text-accent' : 'border-border text-muted-foreground hover:bg-muted/60',
+                  )}
+                >
+                  <Icon className="size-4" />
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         <label className="block text-sm">
           <span className="mb-1 block text-xs font-medium text-muted-foreground">Data e hora (opcional)</span>

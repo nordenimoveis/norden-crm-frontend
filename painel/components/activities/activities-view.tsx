@@ -105,8 +105,8 @@ export function ActivitiesView() {
       )}
 
       {/* Criar (com seletor de negócio) e editar */}
-      <ActivityDialog open={create} onOpenChange={setCreate} />
-      <ActivityDialog open={editing !== null} onOpenChange={(v) => !v && setEditing(null)} activity={editing} />
+      <ActivityDialog key={create ? 'create-open' : 'create-closed'} open={create} onOpenChange={setCreate} />
+      <ActivityDialog key={editing?.id ?? 'edit-closed'} open={editing !== null} onOpenChange={(v) => !v && setEditing(null)} activity={editing} />
 
       <LeadPanel leadId={openLeadId} onClose={closeLead} />
     </div>
