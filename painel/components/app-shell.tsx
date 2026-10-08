@@ -12,7 +12,6 @@ import {
   Inbox,
   KanbanSquare,
   LayoutDashboard,
-  ListChecks,
   LogOut,
   Megaphone,
   Menu,
@@ -47,8 +46,7 @@ const PRINCIPAL: NavItem[] = [
   { href: '/kanban', label: 'Funil de vendas', icon: KanbanSquare },
   { href: '/responderam', label: 'Responderam', icon: Inbox, managerOnly: true, badge: 'inbox' },
   { href: '/leads', label: 'Leads', icon: Contact },
-  { href: '/tarefas', label: 'Tarefas', icon: ListChecks, badge: 'tasks' },
-  { href: '/atividades', label: 'Atividades', icon: CalendarCheck },
+  { href: '/atividades', label: 'Atividades', icon: CalendarCheck, badge: 'tasks' },
 ];
 
 const GESTAO: NavItem[] = [

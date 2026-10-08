@@ -1,7 +1,7 @@
 'use client';
 
 import { apiFetch } from './client';
-import type { Activity, ActivityType } from '@/lib/types';
+import type { Activity, ActivityType, AgendaItem } from '@/lib/types';
 
 export interface NewActivity {
   leadId: string;
@@ -15,16 +15,18 @@ export interface NewActivity {
 
 export type ActivityPatch = Partial<Omit<NewActivity, 'leadId'>>;
 export type AgendaFilter = 'todas' | 'para_fazer' | 'vencido' | 'hoje' | 'concluido';
+export type AgendaSource = 'manual' | 'regua';
 
 /** Atividades de um negócio (lead). */
 export const getLeadActivities = (leadId: string) => apiFetch<Activity[]>(`leads/${leadId}/activities`);
 
-/** Agenda global (tela Atividades). */
-export function getAgenda(f: { filter: AgendaFilter; type?: ActivityType | null; brokerId?: string | null }): Promise<Activity[]> {
+/** Agenda global unificada (atividades + ligações da régua). */
+export function getAgenda(f: { filter: AgendaFilter; type?: ActivityType | null; source?: AgendaSource | null; brokerId?: string | null }): Promise<AgendaItem[]> {
   const p = new URLSearchParams({ filter: f.filter });
   if (f.type) p.set('type', f.type);
+  if (f.source) p.set('source', f.source);
   if (f.brokerId) p.set('brokerId', f.brokerId);
-  return apiFetch<Activity[]>(`activities?${p.toString()}`);
+  return apiFetch<AgendaItem[]>(`activities?${p.toString()}`);
 }
 
 export const getAgendaCounts = () => apiFetch<{ para_fazer: number; vencido: number; hoje: number }>('activities/counts');

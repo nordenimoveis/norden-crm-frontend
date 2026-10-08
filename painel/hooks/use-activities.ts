@@ -11,6 +11,7 @@ import {
   updateActivity,
   type ActivityPatch,
   type AgendaFilter,
+  type AgendaSource,
   type NewActivity,
 } from '@/lib/api/activities';
 import type { ActivityType } from '@/lib/types';
@@ -24,11 +25,11 @@ export function useLeadActivities(leadId: string | null) {
   });
 }
 
-/** Agenda global (tela Atividades). */
-export function useAgenda(filter: AgendaFilter, type?: ActivityType | null, brokerId?: string | null) {
+/** Agenda global unificada (tela Atividades). */
+export function useAgenda(filter: AgendaFilter, type?: ActivityType | null, source?: AgendaSource | null, brokerId?: string | null) {
   return useQuery({
-    queryKey: ['agenda', filter, type ?? null, brokerId ?? null],
-    queryFn: () => getAgenda({ filter, type, brokerId }),
+    queryKey: ['agenda', filter, type ?? null, source ?? null, brokerId ?? null],
+    queryFn: () => getAgenda({ filter, type, source, brokerId }),
     refetchInterval: 60_000,
   });
 }

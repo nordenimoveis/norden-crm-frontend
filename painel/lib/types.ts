@@ -157,6 +157,22 @@ export interface Activity {
   createdAt: string;
 }
 
+/** Item unificado da agenda (atividade manual OU ligação da régua). */
+export interface AgendaItem {
+  source: 'activity' | 'task';
+  id: string;
+  leadId: string;
+  leadName: string;
+  type: ActivityType;
+  subject: string;
+  dueAt: string | null;
+  done: boolean;
+  doneAt: string | null;
+  outcome: string | null;
+  automatic: boolean;
+  brokerName: string | null;
+}
+
 /** Empreendimento do catálogo (vocabulário gerenciável). */
 export interface Product {
   id: string;

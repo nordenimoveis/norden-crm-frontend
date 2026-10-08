@@ -21,6 +21,8 @@ export function useCompleteTask() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['tasks'] });
       qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['agenda'] });
+      qc.invalidateQueries({ queryKey: ['agenda-counts'] });
     },
   });
 }

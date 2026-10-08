@@ -2,13 +2,14 @@
 
 import { useCallback, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { CalendarCheck, Plus } from 'lucide-react';
+import { CalendarCheck, ListChecks, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
 import { useActivityActions, useAgenda, useAgendaCounts } from '@/hooks/use-activities';
+import { useCompleteTask } from '@/hooks/use-tasks';
 import { ACTIVITY_META, ACTIVITY_TYPES, dueInfo } from '@/lib/activity';
-import type { AgendaFilter } from '@/lib/api/activities';
-import type { Activity, ActivityType } from '@/lib/types';
+import type { AgendaFilter, AgendaSource } from '@/lib/api/activities';
+import type { AgendaItem, ActivityType } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { ActivityDialog } from './activity-dialog';
 
@@ -23,11 +24,12 @@ const FILTERS: { key: AgendaFilter; label: string }[] = [
 export function ActivitiesView() {
   const [filter, setFilter] = useState<AgendaFilter>('para_fazer');
   const [type, setType] = useState<ActivityType | null>(null);
-  const { data: activities = [], isLoading } = useAgenda(filter, type);
+  const [source, setSource] = useState<AgendaSource | null>(null);
+  const { data: items = [], isLoading } = useAgenda(filter, source === 'regua' ? null : type, source);
   const { data: counts } = useAgendaCounts();
   const { toggle } = useActivityActions();
+  const completeTask = useCompleteTask();
   const [create, setCreate] = useState(false);
-  const [editing, setEditing] = useState<Activity | null>(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -39,9 +41,15 @@ export function ActivitiesView() {
   const countFor = (k: AgendaFilter) =>
     k === 'para_fazer' ? counts?.para_fazer : k === 'vencido' ? counts?.vencido : k === 'hoje' ? counts?.hoje : undefined;
 
+  function complete(item: AgendaItem, outcome: 'FEITA' | 'SEM_RESPOSTA' = 'FEITA') {
+    if (item.source === 'task') completeTask.mutate({ id: item.id, status: outcome });
+    else toggle.mutate({ id: item.id, done: !item.done });
+  }
+
+  const pickType = (t: ActivityType) => { setSource(null); setType(type === t ? null : t); };
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 py-6 sm:px-6">
-      {/* Cabeçalho + ação principal */}
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex items-start gap-3">
           <span className="mt-0.5 grid size-10 shrink-0 place-items-center rounded-xl bg-accent/[0.1] text-accent">
@@ -49,7 +57,7 @@ export function ActivitiesView() {
           </span>
           <div>
             <h1 className="font-display text-2xl font-medium tracking-tight">Atividades</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Sua agenda — cada atividade vinculada a um negócio.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sua agenda — atividades e ligações da régua, cada uma vinculada a um negócio.</p>
           </div>
         </div>
         <Button onClick={() => setCreate(true)} className="shrink-0">
@@ -57,13 +65,15 @@ export function ActivitiesView() {
         </Button>
       </div>
 
-      {/* Barra de filtros estilo Pipedrive: tipos (ícones) à esquerda, situação à direita */}
+      {/* Barra de filtros: tipos/fonte à esquerda, situação à direita */}
       <div className="mb-4 flex flex-col gap-2 border-b border-border pb-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 sm:mx-0 sm:px-0">
-          <TypeIcon active={type === null} onClick={() => setType(null)} label="Tudo" text />
+          <Chip active={type === null && source === null} onClick={() => { setType(null); setSource(null); }} label="Tudo" text />
           {ACTIVITY_TYPES.map((t) => (
-            <TypeIcon key={t.type} active={type === t.type} onClick={() => setType(type === t.type ? null : t.type)} label={t.label} Icon={t.icon} />
+            <Chip key={t.type} active={source === null && type === t.type} onClick={() => pickType(t.type)} label={t.label} Icon={t.icon} />
           ))}
+          <span className="mx-1 h-5 w-px shrink-0 bg-border" />
+          <Chip active={source === 'regua'} onClick={() => { setType(null); setSource(source === 'regua' ? null : 'regua'); }} label="Régua" Icon={ListChecks} textWithIcon />
         </div>
         <div className="-mx-4 flex items-center gap-4 overflow-x-auto px-4 text-sm sm:mx-0 sm:px-0">
           {FILTERS.map((f) => {
@@ -74,10 +84,7 @@ export function ActivitiesView() {
                 key={f.key}
                 type="button"
                 onClick={() => setFilter(f.key)}
-                className={cn(
-                  'relative shrink-0 whitespace-nowrap pb-2 pt-1 transition-colors',
-                  active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground',
-                )}
+                className={cn('relative shrink-0 whitespace-nowrap pb-2 pt-1 transition-colors', active ? 'font-medium text-foreground' : 'text-muted-foreground hover:text-foreground')}
               >
                 {f.label}
                 {n !== undefined && n > 0 && (
@@ -92,28 +99,25 @@ export function ActivitiesView() {
 
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
-      ) : activities.length === 0 ? (
+      ) : items.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
           Nada por aqui neste filtro. <button type="button" onClick={() => setCreate(true)} className="font-medium text-accent hover:underline">Agendar atividade</button>.
         </div>
       ) : (
         <ul className="space-y-2">
-          {activities.map((a) => (
-            <Row key={a.id} a={a} onToggle={() => toggle.mutate({ id: a.id, done: !a.done })} onOpen={() => openLead(a.leadId)} onEdit={() => setEditing(a)} />
+          {items.map((a) => (
+            <Row key={`${a.source}-${a.id}`} a={a} onComplete={(o) => complete(a, o)} onOpen={() => openLead(a.leadId)} />
           ))}
         </ul>
       )}
 
-      {/* Criar (com seletor de negócio) e editar */}
       <ActivityDialog key={create ? 'create-open' : 'create-closed'} open={create} onOpenChange={setCreate} />
-      <ActivityDialog key={editing?.id ?? 'edit-closed'} open={editing !== null} onOpenChange={(v) => !v && setEditing(null)} activity={editing} />
-
       <LeadPanel leadId={openLeadId} onClose={closeLead} />
     </div>
   );
 }
 
-function TypeIcon({ active, onClick, label, Icon, text }: { active: boolean; onClick: () => void; label: string; Icon?: (typeof ACTIVITY_TYPES)[number]['icon']; text?: boolean }) {
+function Chip({ active, onClick, label, Icon, text, textWithIcon }: { active: boolean; onClick: () => void; label: string; Icon?: (typeof ACTIVITY_TYPES)[number]['icon']; text?: boolean; textWithIcon?: boolean }) {
   return (
     <button
       type="button"
@@ -122,39 +126,51 @@ function TypeIcon({ active, onClick, label, Icon, text }: { active: boolean; onC
       aria-label={label}
       className={cn(
         'inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border px-2 text-xs transition-colors',
-        text ? 'min-w-[48px]' : 'w-9',
+        text ? 'min-w-[48px]' : textWithIcon ? '' : 'w-9',
         active ? 'border-accent bg-accent/10 text-accent' : 'border-transparent text-muted-foreground hover:bg-muted/60',
       )}
     >
-      {Icon ? <Icon className="size-4" /> : label}
+      {Icon && <Icon className="size-4" />} {(text || textWithIcon) && label}
     </button>
   );
 }
 
-function Row({ a, onToggle, onOpen, onEdit }: { a: Activity; onToggle: () => void; onOpen: () => void; onEdit: () => void }) {
+function Row({ a, onComplete, onOpen }: { a: AgendaItem; onComplete: (o?: 'FEITA' | 'SEM_RESPOSTA') => void; onOpen: () => void }) {
   const meta = ACTIVITY_META[a.type];
   const Icon = meta.icon;
   const due = dueInfo(a.dueAt, a.done);
+  const outcomeLabel = a.outcome === 'SEM_RESPOSTA' ? 'Não atendeu' : a.outcome === 'FEITA' ? 'Falou' : null;
   return (
     <li className={cn('flex items-center gap-2.5 rounded-xl border bg-card p-3 shadow-card', a.done ? 'border-border opacity-60' : due.overdue ? 'border-l-[3px] border-l-destructive border-border' : 'border-border')}>
       <button
         type="button"
-        onClick={onToggle}
-        title={a.done ? 'Reabrir' : 'Concluir'}
+        onClick={() => onComplete('FEITA')}
+        disabled={a.done}
+        title={a.done ? 'Concluída' : 'Concluir'}
         className={cn('grid size-6 shrink-0 place-items-center rounded-full border transition-colors', a.done ? 'border-accent bg-accent text-accent-foreground' : 'border-muted-foreground/40 hover:border-accent')}
       >
         {a.done && <span className="text-xs leading-none">✓</span>}
       </button>
       <Icon className={cn('size-4 shrink-0', due.overdue ? 'text-destructive' : 'text-muted-foreground')} />
-      <button type="button" onClick={onEdit} className="min-w-0 flex-1 text-left">
-        <span className={cn('block truncate text-sm font-medium', a.done && 'line-through')}>{a.subject}</span>
+      <button type="button" onClick={onOpen} className="min-w-0 flex-1 text-left">
+        <span className={cn('flex items-center gap-1.5 text-sm font-medium', a.done && 'line-through')}>
+          <span className="truncate">{a.subject}</span>
+          {a.automatic && <span className="shrink-0 rounded-full bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground">régua</span>}
+        </span>
         <span className="mt-0.5 flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
           <span className={cn(due.overdue && 'font-medium text-destructive')}>{meta.label} · {due.label}</span>
+          {outcomeLabel && <span>· {outcomeLabel}</span>}
           {a.brokerName && <span className="truncate">· {a.brokerName}</span>}
         </span>
       </button>
+      {/* Ligação da régua pendente: opção "Não atendeu" */}
+      {a.source === 'task' && !a.done && (
+        <button type="button" onClick={() => onComplete('SEM_RESPOSTA')} className="shrink-0 rounded-md border border-border px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/60" title="Não atendeu">
+          Não atendeu
+        </button>
+      )}
       {a.leadName && (
-        <button type="button" onClick={onOpen} title="Abrir negócio" className="shrink-0 truncate rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/60 max-w-[10rem]">
+        <button type="button" onClick={onOpen} title="Abrir negócio" className="hidden max-w-[10rem] shrink-0 truncate rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/60 sm:block">
           {a.leadName}
         </button>
       )}
