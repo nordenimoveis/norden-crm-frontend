@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
+  createDeal,
   discardLead,
   followLead,
   getInboxCount,
@@ -59,6 +60,20 @@ export function useMarkRead() {
     mutationFn: (id: string) => markLeadRead(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['inbox-count'] });
+      qc.invalidateQueries({ queryKey: ['responded-campaigns'] });
+    },
+  });
+}
+
+/** "Criar negócio": traz o lead para o funil (mantém o dono) e revalida as listas. */
+export function useCreateDeal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (v: { id: string; startCadence?: boolean }) => createDeal(v.id, v.startCadence),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['leads'] });
+      qc.invalidateQueries({ queryKey: ['lead'] });
       qc.invalidateQueries({ queryKey: ['inbox-count'] });
       qc.invalidateQueries({ queryKey: ['responded-campaigns'] });
     },

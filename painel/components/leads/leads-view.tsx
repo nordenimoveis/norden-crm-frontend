@@ -7,6 +7,9 @@ import { Search, Users as UsersIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
+import { CreateDealDialog } from '@/components/leads/create-deal-dialog';
+import { Button } from '@/components/ui/button';
+import { Briefcase } from 'lucide-react';
 import { useLeads } from '@/hooks/use-leads';
 import { useBrokers } from '@/hooks/use-brokers';
 import { useStages } from '@/hooks/use-pipeline';
@@ -67,6 +70,7 @@ export function LeadsView() {
   const openLeadId = params.get('lead');
   const openLead = useCallback((id: string) => router.push(`${pathname}?lead=${id}`, { scroll: false }), [router, pathname]);
   const closeLead = useCallback(() => router.push(pathname, { scroll: false }), [router, pathname]);
+  const [dealLead, setDealLead] = useState<{ id: string; name: string } | null>(null);
 
   const hasFilters = Boolean(search || source || campaign || tag || temperature || brokerId);
   function clearAll() {
@@ -167,11 +171,12 @@ export function LeadsView() {
               <th className="px-3 py-2 font-medium">Etapa</th>
               <th className="px-3 py-2 font-medium">Temp.</th>
               <th className="px-3 py-2 font-medium">Corretor</th>
+              <th className="px-3 py-2 font-medium">Funil</th>
             </tr>
           </thead>
           <tbody>
             {!isLoading && leads.length === 0 && (
-              <tr><td colSpan={7} className="px-3 py-8 text-center text-muted-foreground">Nenhum lead com esses filtros.</td></tr>
+              <tr><td colSpan={8} className="px-3 py-8 text-center text-muted-foreground">Nenhum lead com esses filtros.</td></tr>
             )}
             {leads.map((l) => (
               <tr
@@ -191,11 +196,35 @@ export function LeadsView() {
                 <td className="px-3 py-2 text-muted-foreground">{stageLabel(l.stage)}</td>
                 <td className="px-3 py-2 text-muted-foreground">{TEMPERATURE_LABELS[l.temperature]}</td>
                 <td className="px-3 py-2 text-muted-foreground">{l.brokerName ?? '—'}</td>
+                <td className="px-3 py-2">
+                  {l.inFunnel ? (
+                    <Badge variant="outline">no funil</Badge>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => { e.stopPropagation(); setDealLead({ id: l.id, name: l.name }); }}
+                      title="Transformar em negócio (entra no funil)"
+                    >
+                      <Briefcase className="size-4" /> Criar negócio
+                    </Button>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
+
+      {dealLead && (
+        <CreateDealDialog
+          open={dealLead !== null}
+          onOpenChange={(v) => !v && setDealLead(null)}
+          leadId={dealLead.id}
+          leadName={dealLead.name}
+          onDone={() => setDealLead(null)}
+        />
+      )}
 
       <LeadPanel leadId={openLeadId} onClose={closeLead} />
     </div>

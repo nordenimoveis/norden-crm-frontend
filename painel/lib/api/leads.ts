@@ -35,6 +35,11 @@ export function promoteLead(id: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/promote`, { method: 'POST', body: JSON.stringify({}) });
 }
 
+/** "Criar negócio": traz o lead para o funil (coluna Novo Lead), mantendo o dono. */
+export function createDeal(id: string, startCadence = false): Promise<LeadSummary> {
+  return apiFetch<LeadSummary>(`leads/${id}/create-deal`, { method: 'POST', body: JSON.stringify({ startCadence }) });
+}
+
 /** "Sem interesse": descarta da caixa marcando como Perdido com motivo. */
 export function discardLead(id: string, lossReasonId: string): Promise<LeadSummary> {
   return apiFetch<LeadSummary>(`leads/${id}/discard`, { method: 'POST', body: JSON.stringify({ lossReasonId }) });

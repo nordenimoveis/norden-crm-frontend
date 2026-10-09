@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowRightLeft, Ban, Check, ChevronDown, PanelRightClose, PanelRightOpen, Sparkles } from 'lucide-react';
+import { ArrowRightLeft, Ban, Briefcase, Check, ChevronDown, PanelRightClose, PanelRightOpen, Sparkles } from 'lucide-react';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +25,7 @@ import { useBrokers } from '@/hooks/use-brokers';
 import { useLossReasons } from '@/hooks/use-loss-reasons';
 import { useSession } from '@/components/session-provider';
 import { ActivitiesSection } from '@/components/activities/activities-section';
+import { CreateDealDialog } from '@/components/leads/create-deal-dialog';
 import {
   SOURCE_LABELS,
   TEMPERATURE_LABELS,
@@ -88,6 +89,7 @@ function PanelBody({ leadId }: { leadId: string }) {
   const [tab, setTab] = useState<'resumo' | 'conversa'>('conversa');
   // No desktop, permite recolher a coluna de contexto para a conversa ocupar tudo.
   const [contextOpen, setContextOpen] = useState(true);
+  const [dealOpen, setDealOpen] = useState(false);
   const { draft, clearDraft } = useDraft(leadId);
   const { markRead } = useUnread();
   // Abrir o lead zera o contador de não lidas dele.
@@ -137,28 +139,34 @@ function PanelBody({ leadId }: { leadId: string }) {
             </p>
           </div>
 
-          {/* Etapa (pill dropdown) */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button
-                type="button"
-                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted"
-              >
-                {stage?.label ?? lead.stage}
-                <ChevronDown className="size-3 text-muted-foreground" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
-              <DropdownMenuLabel>Mover para etapa</DropdownMenuLabel>
-              <DropdownMenuRadioGroup value={lead.stage} onValueChange={changeStage}>
-                {stages.map((s) => (
-                  <DropdownMenuRadioItem key={s.key} value={s.key}>
-                    {s.label}
-                  </DropdownMenuRadioItem>
-                ))}
-              </DropdownMenuRadioGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Etapa (pill dropdown) — só quando é negócio no funil */}
+          {lead.inFunnel === false ? (
+            <span className="inline-flex shrink-0 items-center rounded-full border border-dashed border-border px-2.5 py-1 text-xs font-medium text-muted-foreground">
+              Fora do funil
+            </span>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type="button"
+                  className="inline-flex shrink-0 items-center gap-1 rounded-full border border-border bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-muted"
+                >
+                  {stage?.label ?? lead.stage}
+                  <ChevronDown className="size-3 text-muted-foreground" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="max-h-72 overflow-y-auto">
+                <DropdownMenuLabel>Mover para etapa</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={lead.stage} onValueChange={changeStage}>
+                  {stages.map((s) => (
+                    <DropdownMenuRadioItem key={s.key} value={s.key}>
+                      {s.label}
+                    </DropdownMenuRadioItem>
+                  ))}
+                </DropdownMenuRadioGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           <TemperatureControl
             value={lead.temperature}
@@ -185,6 +193,16 @@ function PanelBody({ leadId }: { leadId: string }) {
             {lead.lostAt ? <span className="text-muted-foreground"> · {formatDate(lead.lostAt)}</span> : null}
           </div>
         )}
+
+        {lead.inFunnel === false && !isLost && (
+          <div className="mt-3 flex flex-wrap items-center justify-between gap-2 rounded-md border border-accent/30 bg-accent/[0.06] px-3 py-2 text-sm">
+            <span className="text-muted-foreground">Este lead ainda não é um negócio no funil.</span>
+            <Button size="sm" onClick={() => setDealOpen(true)}>
+              <Briefcase className="size-4" /> Criar negócio
+            </Button>
+          </div>
+        )}
+        <CreateDealDialog open={dealOpen} onOpenChange={setDealOpen} leadId={leadId} leadName={lead.name} />
       </div>
 
       {/* Abas — só no celular (no desktop as duas colunas aparecem juntas) */}
