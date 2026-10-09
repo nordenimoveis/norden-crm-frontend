@@ -159,9 +159,21 @@ export function LeadsView() {
         {isLoading ? 'Carregando…' : <span><span className="font-medium text-foreground">{leads.length}</span> {leads.length === 1 ? 'lead' : 'leads'}{leads.length >= LIMIT ? '+ (refine os filtros para ver mais)' : ''}</span>}
       </div>
 
-      {/* Tabela */}
+      {/* Tabela — table-fixed garante que nunca estoure a largura do cartão
+          (as colunas dividem a largura disponível e o conteúdo trunca). No
+          mobile, o min-w força a rolagem horizontal. */}
       <div className="mt-2 overflow-x-auto rounded-xl border border-border">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[48rem] table-fixed text-sm">
+          <colgroup>
+            <col className="w-[20%]" />{/* Nome */}
+            <col className="w-[13%]" />{/* Telefone */}
+            <col className="w-[9%]" />{/* Origem */}
+            <col className="w-[16%]" />{/* Campanha */}
+            <col className="w-[13%]" />{/* Etapa */}
+            <col className="w-[8%]" />{/* Temp. */}
+            <col className="w-[13%]" />{/* Corretor */}
+            <col className="w-[8%]" />{/* Funil */}
+          </colgroup>
           <thead>
             <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
               <th className="px-3 py-2 font-medium">Nome</th>
@@ -187,15 +199,15 @@ export function LeadsView() {
                 <td className="px-3 py-2 font-medium text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span className={cn('size-2 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
-                    <span className="max-w-[12rem] truncate">{l.name}</span>
+                    <span className="truncate">{l.name}</span>
                   </span>
                 </td>
-                <td className="px-3 py-2 tabular-nums text-muted-foreground">{l.phone ?? '—'}</td>
+                <td className="truncate px-3 py-2 tabular-nums text-muted-foreground">{l.phone ?? '—'}</td>
                 <td className="px-3 py-2"><Badge variant="outline">{SOURCE_LABELS[l.source]}</Badge></td>
-                <td className="px-3 py-2 text-muted-foreground"><span className="block max-w-[10rem] truncate">{l.campaign ?? '—'}</span></td>
-                <td className="px-3 py-2 text-muted-foreground">{stageLabel(l.stage)}</td>
-                <td className="px-3 py-2 text-muted-foreground">{TEMPERATURE_LABELS[l.temperature]}</td>
-                <td className="px-3 py-2 text-muted-foreground"><span className="block max-w-[10rem] truncate">{l.brokerName ?? '—'}</span></td>
+                <td className="truncate px-3 py-2 text-muted-foreground">{l.campaign ?? '—'}</td>
+                <td className="truncate px-3 py-2 text-muted-foreground">{stageLabel(l.stage)}</td>
+                <td className="truncate px-3 py-2 text-muted-foreground">{TEMPERATURE_LABELS[l.temperature]}</td>
+                <td className="truncate px-3 py-2 text-muted-foreground">{l.brokerName ?? '—'}</td>
                 <td className="px-3 py-2">
                   {l.inFunnel ? (
                     <Badge variant="outline">no funil</Badge>
