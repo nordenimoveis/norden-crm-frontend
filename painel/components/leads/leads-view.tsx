@@ -187,15 +187,15 @@ export function LeadsView() {
                 <td className="px-3 py-2 font-medium text-foreground">
                   <span className="flex items-center gap-1.5">
                     <span className={cn('size-2 shrink-0 rounded-full', TEMP_DOT[l.temperature])} />
-                    <span className="max-w-[16rem] truncate">{l.name}</span>
+                    <span className="max-w-[12rem] truncate">{l.name}</span>
                   </span>
                 </td>
                 <td className="px-3 py-2 tabular-nums text-muted-foreground">{l.phone ?? '—'}</td>
                 <td className="px-3 py-2"><Badge variant="outline">{SOURCE_LABELS[l.source]}</Badge></td>
-                <td className="px-3 py-2 text-muted-foreground"><span className="block max-w-[12rem] truncate">{l.campaign ?? '—'}</span></td>
+                <td className="px-3 py-2 text-muted-foreground"><span className="block max-w-[10rem] truncate">{l.campaign ?? '—'}</span></td>
                 <td className="px-3 py-2 text-muted-foreground">{stageLabel(l.stage)}</td>
                 <td className="px-3 py-2 text-muted-foreground">{TEMPERATURE_LABELS[l.temperature]}</td>
-                <td className="px-3 py-2 text-muted-foreground">{l.brokerName ?? '—'}</td>
+                <td className="px-3 py-2 text-muted-foreground"><span className="block max-w-[10rem] truncate">{l.brokerName ?? '—'}</span></td>
                 <td className="px-3 py-2">
                   {l.inFunnel ? (
                     <Badge variant="outline">no funil</Badge>
@@ -203,10 +203,11 @@ export function LeadsView() {
                     <Button
                       size="sm"
                       variant="outline"
+                      className="whitespace-nowrap"
                       onClick={(e) => { e.stopPropagation(); setDealLead({ id: l.id, name: l.name }); }}
                       title="Transformar em negócio (entra no funil)"
                     >
-                      <Briefcase className="size-4" /> Criar negócio
+                      <Briefcase className="size-4" /> Criar
                     </Button>
                   )}
                 </td>
