@@ -165,14 +165,14 @@ export function LeadsView() {
       <div className="mt-2 overflow-x-auto rounded-xl border border-border">
         <table className="w-full min-w-[48rem] table-fixed text-sm">
           <colgroup>
-            <col className="w-[20%]" />{/* Nome */}
+            <col className="w-[17%]" />{/* Nome */}
             <col className="w-[13%]" />{/* Telefone */}
             <col className="w-[9%]" />{/* Origem */}
-            <col className="w-[16%]" />{/* Campanha */}
-            <col className="w-[13%]" />{/* Etapa */}
+            <col className="w-[15%]" />{/* Campanha */}
+            <col className="w-[12%]" />{/* Etapa */}
             <col className="w-[8%]" />{/* Temp. */}
-            <col className="w-[13%]" />{/* Corretor */}
-            <col className="w-[8%]" />{/* Funil */}
+            <col className="w-[14%]" />{/* Corretor */}
+            <col className="w-[12%]" />{/* Funil */}
           </colgroup>
           <thead>
             <tr className="border-b border-border bg-muted/30 text-left text-xs uppercase tracking-wide text-muted-foreground">
@@ -208,7 +208,7 @@ export function LeadsView() {
                 <td className="truncate px-3 py-2 text-muted-foreground">{stageLabel(l.stage)}</td>
                 <td className="truncate px-3 py-2 text-muted-foreground">{TEMPERATURE_LABELS[l.temperature]}</td>
                 <td className="truncate px-3 py-2 text-muted-foreground">{l.brokerName ?? '—'}</td>
-                <td className="px-3 py-2">
+                <td className="overflow-hidden px-2 py-2">
                   {l.inFunnel ? (
                     <Badge variant="outline">no funil</Badge>
                   ) : (
