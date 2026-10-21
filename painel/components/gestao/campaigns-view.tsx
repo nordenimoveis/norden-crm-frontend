@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Check, Clock, Megaphone, MessageSquare, Plus, RefreshCw, Send, Trash2, Users } from 'lucide-react';
+import { AlertTriangle, Check, Clock, Image as ImageIcon, Megaphone, MessageSquare, Plus, RefreshCw, Send, Trash2, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -259,7 +259,14 @@ function TemplatesManager({ onError }: { onError: (m: string | null) => void }) 
             <li key={t.id} className={cn('rounded-lg border border-border bg-card p-3 shadow-card', !t.active && 'opacity-60')}>
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="font-mono text-sm">{t.name}</p>
+                  <p className="flex items-center gap-2 font-mono text-sm">
+                    {t.name}
+                    {t.headerFormat && (
+                      <Badge variant={t.headerMediaUrl ? 'outline' : 'alert'} className="gap-1 font-sans">
+                        <ImageIcon className="size-3" /> {t.headerFormat === 'IMAGE' ? 'imagem' : t.headerFormat.toLowerCase()}
+                      </Badge>
+                    )}
+                  </p>
                   <p className="mt-1 text-sm text-muted-foreground">{t.preview}</p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
@@ -272,6 +279,7 @@ function TemplatesManager({ onError }: { onError: (m: string | null) => void }) 
                   </Button>
                 </div>
               </div>
+              {t.headerFormat && <HeaderMediaEditor template={t} onError={onError} />}
             </li>
           ))}
         </ul>
@@ -293,6 +301,57 @@ function TemplatesManager({ onError }: { onError: (m: string | null) => void }) 
         </div>
       </form>
     </section>
+  );
+}
+
+/** Configura a URL pública da mídia do cabeçalho de um template (ex.: imagem do Aura). */
+function HeaderMediaEditor({ template, onError }: { template: CampaignTemplate; onError: (m: string | null) => void }) {
+  const { update } = useTemplateMutations();
+  const [url, setUrl] = useState(template.headerMediaUrl ?? '');
+  const [editing, setEditing] = useState(!template.headerMediaUrl);
+
+  function save() {
+    onError(null);
+    update.mutate(
+      { id: template.id, patch: { headerMediaUrl: url.trim() } },
+      { onSuccess: () => setEditing(false), onError: (e) => onError(msg(e)) },
+    );
+  }
+
+  if (!editing && template.headerMediaUrl) {
+    return (
+      <div className="mt-2 flex items-center gap-3 rounded-md border border-border bg-muted/30 p-2">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={template.headerMediaUrl} alt="Cabeçalho" className="size-12 shrink-0 rounded object-cover" />
+        <p className="min-w-0 flex-1 truncate text-xs text-muted-foreground">{template.headerMediaUrl}</p>
+        <Button variant="ghost" size="sm" onClick={() => setEditing(true)}>Trocar</Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 space-y-2 rounded-md border border-border bg-muted/30 p-2">
+      {!template.headerMediaUrl && (
+        <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+          <AlertTriangle className="size-3.5" /> Falta a imagem do cabeçalho — sem ela a campanha não pode ser disparada.
+        </p>
+      )}
+      <div className="flex items-center gap-2">
+        <Input
+          value={url}
+          onChange={(e) => setUrl(e.target.value)}
+          placeholder="https://materiais.nordenimoveis.com.br/aura/aura-fachada.jpg"
+          className="h-9 text-sm"
+        />
+        <Button size="sm" onClick={save} disabled={!url.trim() || update.isPending} className="shrink-0">Salvar</Button>
+        {template.headerMediaUrl && (
+          <Button variant="ghost" size="sm" onClick={() => { setUrl(template.headerMediaUrl ?? ''); setEditing(false); }} className="shrink-0">
+            Cancelar
+          </Button>
+        )}
+      </div>
+      <p className="text-xs text-muted-foreground">URL pública (acessível sem login) da imagem que vai no topo do template.</p>
+    </div>
   );
 }
 
@@ -373,7 +432,20 @@ function CampaignComposer({ onClose, onError }: { onClose: () => void; onError: 
             {activeTemplates.length === 0 && (
               <p className="text-xs text-muted-foreground">Nenhum template ativo — cadastre um em “Templates aprovados”.</p>
             )}
-            {template && <p className="rounded-md bg-muted/50 p-2.5 text-sm">{template.preview}</p>}
+            {template && (
+              <div className="overflow-hidden rounded-md bg-muted/50">
+                {template.headerMediaUrl && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={template.headerMediaUrl} alt="Cabeçalho do template" className="max-h-40 w-full object-cover" />
+                )}
+                <p className="p-2.5 text-sm">{template.preview}</p>
+              </div>
+            )}
+            {template?.headerFormat && !template.headerMediaUrl && (
+              <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+                <AlertTriangle className="size-3.5" /> Este template tem cabeçalho de imagem, mas nenhuma imagem foi configurada. Defina em “Templates aprovados” antes de disparar.
+              </p>
+            )}
           </div>
 
           {/* Público */}
@@ -432,7 +504,16 @@ function CampaignComposer({ onClose, onError }: { onClose: () => void; onError: 
 
         <DialogFooter>
           <Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button onClick={submit} disabled={submitting || !name.trim() || !templateId || (audience.data?.count ?? 0) === 0}>
+          <Button
+            onClick={submit}
+            disabled={
+              submitting ||
+              !name.trim() ||
+              !templateId ||
+              (audience.data?.count ?? 0) === 0 ||
+              Boolean(template?.headerFormat && !template.headerMediaUrl)
+            }
+          >
             {submitting ? 'Criando…' : when === 'agendar' ? 'Agendar campanha' : 'Enviar campanha'}
           </Button>
         </DialogFooter>

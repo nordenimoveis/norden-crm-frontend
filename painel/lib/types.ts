@@ -87,6 +87,10 @@ export interface CampaignTemplate {
   category: string;
   preview: string;
   paramSources: string[];
+  /** 'IMAGE' | 'VIDEO' | 'DOCUMENT' se o template tem cabeçalho de mídia; null se não. */
+  headerFormat: string | null;
+  /** URL pública fixa da mídia do cabeçalho (configurada pelo gestor). */
+  headerMediaUrl: string | null;
   active: boolean;
 }
 
@@ -97,6 +101,8 @@ export interface Campaign {
   name: string;
   templateName: string;
   templatePreview: string;
+  headerFormat: string | null;
+  headerMediaUrl: string | null;
   status: CampaignStatus;
   scheduledFor: string | null;
   total: number;

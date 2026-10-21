@@ -9,8 +9,10 @@ export const getCampaignTemplates = () => apiFetch<CampaignTemplate[]>('campaign
 export const createCampaignTemplate = (input: { name: string; preview: string; paramSources: string[] }) =>
   apiFetch<CampaignTemplate>('campaign-templates', { method: 'POST', body: JSON.stringify(input) });
 
-export const updateCampaignTemplate = (id: string, patch: Partial<{ name: string; preview: string; paramSources: string[]; active: boolean }>) =>
-  apiFetch<CampaignTemplate>(`campaign-templates/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+export const updateCampaignTemplate = (
+  id: string,
+  patch: Partial<{ name: string; preview: string; paramSources: string[]; active: boolean; headerMediaUrl: string }>,
+) => apiFetch<CampaignTemplate>(`campaign-templates/${id}`, { method: 'PATCH', body: JSON.stringify(patch) });
 
 export const deleteCampaignTemplate = (id: string) =>
   apiFetch<void>(`campaign-templates/${id}`, { method: 'DELETE' });
