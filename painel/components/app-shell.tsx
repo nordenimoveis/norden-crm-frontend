@@ -44,7 +44,7 @@ interface NavItem {
 const PRINCIPAL: NavItem[] = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, managerOnly: true },
   { href: '/kanban', label: 'Funil de vendas', icon: KanbanSquare },
-  { href: '/responderam', label: 'Responderam', icon: Inbox, managerOnly: true, badge: 'inbox' },
+  { href: '/responderam', label: 'Responderam', icon: Inbox, badge: 'inbox' },
   { href: '/leads', label: 'Leads', icon: Contact },
   { href: '/atividades', label: 'Atividades', icon: CalendarCheck, badge: 'tasks' },
 ];
@@ -64,7 +64,7 @@ function useNavState() {
   const user = useSession();
   const manager = isManager(user.role);
   const { data: tasks = [] } = useTasks();
-  const { data: inbox } = useInboxCount(manager);
+  const { data: inbox } = useInboxCount(true); // corretor também tem respondentes (os seus)
   const visible = (items: NavItem[]) => items.filter((i) => !i.managerOnly || manager);
   const counts = { tasks: tasks.length, inbox: inbox?.count ?? 0 };
   return { user, manager, counts, principal: visible(PRINCIPAL), gestao: visible(GESTAO) };
