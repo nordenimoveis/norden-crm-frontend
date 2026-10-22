@@ -2,12 +2,14 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { ArrowDownUp, ArrowRightCircle, Clock, Inbox, MessageSquare, ThumbsDown } from 'lucide-react';
+import { ArrowDownUp, ArrowRightCircle, Clock, Inbox, MessageSquare, ThumbsDown, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { LeadPanel } from '@/components/lead-panel/lead-panel';
 import { TemperatureControl } from '@/components/kanban/temperature-control';
+import { useSession } from '@/components/session-provider';
+import { brokerDot, brokerPill } from '@/lib/broker-color';
 import {
   useLeads,
   useUpdateLead,
@@ -23,6 +25,7 @@ import {
   SOURCE_LABELS,
   TEMPERATURES,
   TEMPERATURE_LABELS,
+  isManager,
   type LeadSummary,
   type Source,
   type Temperature,
@@ -86,10 +89,13 @@ function Pill({
 }
 
 export function InboxView() {
+  const user = useSession();
+  const manager = isManager(user.role);
   // Campanha: 'all' (todas), 'none' (sem campanha) ou o id. Status: estado de triagem.
   const [campaign, setCampaign] = useState<string>('all');
   const [status, setStatus] = useState<InboxStatus>('NOVO');
   const [temperature, setTemperature] = useState<Temperature | null>(null);
+  const [broker, setBroker] = useState<string>(''); // '' = todos; só gestor filtra por corretor
   const [order, setOrder] = useState<'recent' | 'waiting'>('recent');
 
   const campaignFilter = useMemo(
@@ -123,7 +129,8 @@ export function InboxView() {
     Boolean(l.lastInboundAt) && (!l.lastReadAt || Date.parse(l.lastInboundAt!) > Date.parse(l.lastReadAt));
 
   const visible = useMemo(() => {
-    const base = temperature ? leads.filter((l) => l.temperature === temperature) : leads;
+    let base = temperature ? leads.filter((l) => l.temperature === temperature) : leads;
+    if (broker) base = base.filter((l) => (broker === 'none' ? !l.brokerId : l.brokerId === broker));
     return [...base].sort((a, b) => {
       // Não lidos sempre primeiro.
       const u = (isUnread(b) ? 1 : 0) - (isUnread(a) ? 1 : 0);
@@ -133,7 +140,24 @@ export function InboxView() {
       // 'waiting' = aguardando há mais tempo (mais antigo primeiro); 'recent' = mais novo primeiro.
       return order === 'waiting' ? ta - tb : tb - ta;
     });
-  }, [leads, temperature, order]);
+  }, [leads, temperature, broker, order]);
+
+  // Corretores presentes nas respostas atuais (para os chips do filtro), com contagem.
+  const brokerChips = useMemo(() => {
+    const map = new Map<string, { id: string; name: string; count: number }>();
+    let none = 0;
+    for (const l of leads) {
+      if (l.brokerId) {
+        const cur = map.get(l.brokerId) ?? { id: l.brokerId, name: l.brokerName ?? 'Corretor', count: 0 };
+        cur.count += 1;
+        map.set(l.brokerId, cur);
+      } else {
+        none += 1;
+      }
+    }
+    return { list: [...map.values()].sort((a, b) => b.count - a.count), none };
+  }, [leads]);
+  const showBrokerFilter = manager && (brokerChips.list.length > 1 || (brokerChips.none > 0 && brokerChips.list.length > 0));
 
   // Painel do lead via ?lead=
   const router = useRouter();
@@ -236,6 +260,35 @@ export function InboxView() {
         </button>
       </div>
 
+      {/* Filtro rápido por corretor (só gestor) */}
+      {showBrokerFilter && (
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <span className="mr-0.5 inline-flex items-center gap-1 text-xs text-muted-foreground">
+            <Users className="size-3.5" /> Corretor:
+          </span>
+          <BrokerChip active={broker === ''} onClick={() => setBroker('')} label="Todos" />
+          {brokerChips.list.map((b) => (
+            <BrokerChip
+              key={b.id}
+              active={broker === b.id}
+              onClick={() => setBroker(broker === b.id ? '' : b.id)}
+              dot={brokerDot(b.id)}
+              label={b.name}
+              count={b.count}
+            />
+          ))}
+          {brokerChips.none > 0 && (
+            <BrokerChip
+              active={broker === 'none'}
+              onClick={() => setBroker(broker === 'none' ? '' : 'none')}
+              dot={brokerDot(null)}
+              label="Sem corretor"
+              count={brokerChips.none}
+            />
+          )}
+        </div>
+      )}
+
       {isLoading ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : visible.length === 0 ? (
@@ -263,6 +316,12 @@ export function InboxView() {
                         <span className="rounded-full bg-destructive px-1.5 text-[10px] font-semibold leading-[18px] text-destructive-foreground">nova</span>
                       )}
                       <Badge variant="outline">{l.lastCampaignName ?? l.campaign ?? SOURCE_LABELS[l.source as Source]}</Badge>
+                      {l.brokerName && (
+                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium', brokerPill(l.brokerId))}>
+                          <span className={cn('size-1.5 rounded-full', brokerDot(l.brokerId))} />
+                          {l.brokerName}
+                        </span>
+                      )}
                       {l.interest && (
                         <span className="inline-flex items-center rounded-full bg-accent/10 px-2 py-0.5 text-[11px] font-medium text-accent">{l.interest}</span>
                       )}
@@ -359,6 +418,36 @@ export function InboxView() {
 
       <LeadPanel leadId={openLeadId} onClose={closeLead} />
     </div>
+  );
+}
+
+/** Chip do filtro rápido por corretor (com ponto da cor e contagem). */
+function BrokerChip({
+  active,
+  onClick,
+  label,
+  dot,
+  count,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+  dot?: string;
+  count?: number;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+        active ? 'border-foreground/20 bg-foreground/[0.06] text-foreground' : 'border-border text-muted-foreground hover:bg-muted',
+      )}
+    >
+      {dot && <span className={cn('size-2 rounded-full', dot)} />}
+      <span className="max-w-[10rem] truncate">{label}</span>
+      {count !== undefined && <span className="text-muted-foreground">{count}</span>}
+    </button>
   );
 }
 
